@@ -5,6 +5,7 @@
  */
 package com.intel.jnfd.deamon.fw;
 
+import com.intel.jnfd.deamon.table.measurement.MeasurementAccessor;
 import net.named_data.jndn.Name;
 
 /**
@@ -12,6 +13,10 @@ import net.named_data.jndn.Name;
  * @author zht
  */
 public class Strategy {
+    
+    public Strategy(Forwarder forwarder, Name name) {
+        
+    }
 
     public Name getName() {
         return name;
@@ -28,4 +33,6 @@ public class Strategy {
     }
     
     private Name name;
+    private Forwarder forwarder;
+    private MeasurementAccessor measurementAccessor;
 }

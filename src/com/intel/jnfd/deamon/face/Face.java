@@ -65,6 +65,14 @@ public abstract class Face {
     public void setIsMultiAccess(boolean isMultiAccess) {
         this.isMultiAccess = isMultiAccess;
     }
+
+    public int getFaceId() {
+        return faceId;
+    }
+
+    public void setFaceId(int faceId) {
+        this.faceId = faceId;
+    }
     
     @Override
     public boolean equals(Object o) {
@@ -81,4 +89,5 @@ public abstract class Face {
     private FaceUri remoteUri;
     private boolean isLocal;
     private boolean isMultiAccess;
+    private int faceId;
 }

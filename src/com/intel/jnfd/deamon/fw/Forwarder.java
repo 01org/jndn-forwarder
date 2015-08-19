@@ -5,10 +5,16 @@
  */
 package com.intel.jnfd.deamon.fw;
 
+import com.intel.jnfd.deamon.table.fib.Fib;
+
 /**
  *
  * @author zht
  */
 public class Forwarder {
+
+    public Fib getFib() {
+        return null;
+    }
     
 }
