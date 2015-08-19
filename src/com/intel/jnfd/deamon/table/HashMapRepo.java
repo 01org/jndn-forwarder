@@ -36,6 +36,18 @@ public class HashMapRepo<V> {
         }
         return null;
     }
+    
+    public V findLongestPrefixMatch(Name prefix, EntryFilter filter) {
+        V result = null;
+        for (int i = prefix.size(); i >= 0; i--) {
+            Name p = prefix.getPrefix(i);
+            V r = findExactMatch(p);
+            if (r != null && filter.filt(r)) {
+                return result;
+            }
+        }
+        return null;
+    }
 
     public V findExactMatch(Name prefix) {
         return repo.get(prefix);
