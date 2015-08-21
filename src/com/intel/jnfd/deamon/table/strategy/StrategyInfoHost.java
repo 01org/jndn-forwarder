@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.table.strategy;
 
-import com.intel.jnfd.deamon.face.Forwarder;
+import com.intel.jndn.forwarder.api.Forwarder;
 import com.intel.jnfd.deamon.fw.StrategyInfo;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;

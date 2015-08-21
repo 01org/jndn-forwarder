@@ -5,16 +5,21 @@
  */
 package com.intel.jnfd.deamon.fw;
 
+import com.intel.jndn.forwarder.api.Strategy;
+
 /**
  *
  * @author zht
  */
-public class BestRouteStrategy extends StrategyInfo {
+public class BestRouteStrategy extends Strategy {
 
-    private static final int typeId = 1;
+	public class BestRouteStrategyInfo extends StrategyInfo {
 
-    @Override
-    public int getTypeId() {
-        return typeId;
-    }
+		private static final int typeId = 1;
+
+		@Override
+		public int getTypeId() {
+			return typeId;
+		}
+	}
 }

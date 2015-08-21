@@ -5,6 +5,8 @@
  */
 package com.intel.jnfd.deamon.face;
 
+import com.intel.jndn.forwarder.api.callbacks.OnFaceConnected;
+import com.intel.jndn.forwarder.api.callbacks.OnFaceConnectionFailed;
 import java.util.List;
 
 /**
@@ -12,8 +14,11 @@ import java.util.List;
  * @author zht
  */
 public abstract class ProtocolFactory {
-    public abstract void createFace(FaceUri faceUri, FaceCreatedCallback faceCreatedCallback,
-            FaceConnectFailedCallback faceConnectFailedCallback);
-    
-    public abstract List<? extends Channel> getChannels();
+
+	public abstract String scheme();
+
+	public abstract void createFace(FaceUri faceUri, OnFaceConnected faceCreatedCallback,
+			OnFaceConnectionFailed faceConnectFailedCallback);
+
+	public abstract List<? extends Channel> getChannels();
 }

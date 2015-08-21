@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.table.strategy;
 
-import com.intel.jnfd.deamon.fw.Strategy;
+import com.intel.jndn.forwarder.api.Strategy;
 import net.named_data.jndn.Name;
 
 /**

@@ -5,6 +5,8 @@
  */
 package com.intel.jnfd.deamon.table;
 
+import com.intel.jndn.forwarder.api.NameTable;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -15,16 +17,18 @@ import net.named_data.jndn.Name;
  *
  * @author zht
  */
-public class HashMapRepo<V> {
+public class HashMapRepo<V> implements NameTable<V> {
 
     public HashMapRepo() {
         repo = new ConcurrentHashMap<>();
     }
 
+	@Override
     public int size() {
         return repo.size();
     }
 
+	@Override
     public V findLongestPrefixMatch(Name prefix) {
         V result = null;
         for (int i = prefix.size(); i >= 0; i--) {
@@ -49,25 +53,34 @@ public class HashMapRepo<V> {
         return null;
     }
 
+	@Override
     public V findExactMatch(Name prefix) {
         return repo.get(prefix);
     }
     
+	@Override
     public void insert(Name prefix, V value) {
         repo.put(prefix, value);
     }
 
+	@Override
     public void erase(Name prefix) {
         repo.remove(prefix);
     }
 
+	@Override
     public boolean hasKey(Name key) {
         return repo.containsKey(key);
     }
     
+	@Override
     public Set<Entry<Name, V>> EntrySet() {
         return repo.entrySet();
     }
+	
+	public Collection<V> values() {
+		return repo.values();
+	}
 
     private Map<Name, V> repo;
 }

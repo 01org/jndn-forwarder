@@ -20,13 +20,13 @@ import java.util.concurrent.Executors;
  */
 public class FaceManager {
 
-    FaceManager(ExecutorService executorService) throws IOException {
+    public FaceManager(ExecutorService executorService) throws IOException {
         this.executorService = executorService;
         asynchronousChannelGroup = AsynchronousChannelGroup.withThreadPool(executorService);
         tcpFactory = new TcpFactory(asynchronousChannelGroup);
     }
     
-    FaceManager() throws IOException {
+    public FaceManager() throws IOException {
         executorService = Executors.newCachedThreadPool();
         asynchronousChannelGroup = AsynchronousChannelGroup.withThreadPool(executorService);
         tcpFactory = new TcpFactory(asynchronousChannelGroup);

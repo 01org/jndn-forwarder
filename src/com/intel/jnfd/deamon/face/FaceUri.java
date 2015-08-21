@@ -140,6 +140,12 @@ public class FaceUri {
         }
         return false;
     }
+	
+	@Override
+	public String toString(){
+		// TODO add IPv6 handling
+		return String.format("%s://%s:%s", scheme, host, port);
+	}
 
     private String scheme;
     private String host;

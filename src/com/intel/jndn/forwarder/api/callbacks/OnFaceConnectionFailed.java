@@ -3,13 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.intel.jnfd.deamon.face;
+package com.intel.jndn.forwarder.api.callbacks;
+
+import com.intel.jnfd.deamon.face.FaceUri;
 
 /**
  *
  * @author zht
  */
-public interface FaceConnectFailedCallback {
+public interface OnFaceConnectionFailed {
 
-    public void onFail(String message);
+    public void onConnectionFailure(FaceUri uri, Throwable throwable);
 }

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.intel.jnfd.deamon.fw;
+package com.intel.jndn.forwarder.api;
 
 import com.intel.jnfd.deamon.table.measurement.MeasurementAccessor;
 import net.named_data.jndn.Name;
@@ -12,7 +12,7 @@ import net.named_data.jndn.Name;
  *
  * @author zht
  */
-public class Strategy {
+public abstract class Strategy {
     
     public Strategy(Forwarder forwarder, Name name) {
         
