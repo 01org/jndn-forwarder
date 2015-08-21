@@ -8,7 +8,6 @@ package com.intel.jnfd.deamon.face;
 import com.intel.jndn.forwarder.api.Channel;
 import com.intel.jndn.forwarder.api.Face;
 import com.intel.jndn.forwarder.api.FaceManager;
-import com.intel.jndn.forwarder.api.OnFaceDestroyed;
 import com.intel.jndn.forwarder.api.ProtocolFactory;
 import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
 import com.intel.jndn.forwarder.api.callbacks.OnFailed;
