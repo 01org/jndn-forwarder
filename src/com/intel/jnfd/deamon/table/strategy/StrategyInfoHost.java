@@ -5,12 +5,9 @@
  */
 package com.intel.jnfd.deamon.table.strategy;
 
-import com.intel.jndn.forwarder.api.Forwarder;
 import com.intel.jnfd.deamon.fw.StrategyInfo;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import net.named_data.jndn.Name;
 
 /**
  *

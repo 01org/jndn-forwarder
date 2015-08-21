@@ -10,5 +10,6 @@ package com.intel.jnfd.util;
  * @author zht
  */
 public class NfdCommon {
+	public static final long DEFAULT_INTEREST_LIFETIME = 2000;
     
 }

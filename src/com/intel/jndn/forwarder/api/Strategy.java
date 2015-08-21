@@ -5,6 +5,7 @@
  */
 package com.intel.jndn.forwarder.api;
 
+import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.table.measurement.MeasurementAccessor;
 import net.named_data.jndn.Name;
 
@@ -13,9 +14,11 @@ import net.named_data.jndn.Name;
  * @author zht
  */
 public abstract class Strategy {
+	private final Name prefix;
     
-    public Strategy(Forwarder forwarder, Name name) {
-        
+    public Strategy(OnInterestReceived onInterestReceived, Name prefix) {
+		this.onInterestReceived = onInterestReceived;
+		this.prefix = prefix;
     }
 
     public Name getName() {
@@ -33,6 +36,6 @@ public abstract class Strategy {
     }
     
     private Name name;
-    private Forwarder forwarder;
+    private OnInterestReceived onInterestReceived;
     private MeasurementAccessor measurementAccessor;
 }

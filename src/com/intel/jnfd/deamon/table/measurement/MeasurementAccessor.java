@@ -5,8 +5,8 @@
  */
 package com.intel.jnfd.deamon.table.measurement;
 
+import com.intel.jndn.forwarder.api.Strategy;
 import com.intel.jnfd.deamon.table.EntryFilter;
-import com.intel.jnfd.deamon.fw.Strategy;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoice;
 import net.named_data.jndn.Name;
 

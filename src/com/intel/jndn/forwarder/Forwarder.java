@@ -41,7 +41,7 @@ public class Forwarder implements Runnable {
 	private final StrategyChoice strategies;
 
 	public Forwarder() {
-		this(Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors()), null, null, null, new ArrayList(), new StrategyChoice(new BestRouteStrategy()));
+		this(Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors()), null, null, null, new ArrayList(), new StrategyChoice(new BestRouteStrategy(null, new Name())));
 	}
 
 	public Forwarder(ScheduledExecutorService pool, PendingInterestTable pit, FaceInformationBase fib, ContentStore cs, List<ProtocolFactory> protocols, StrategyChoice strategies) {
@@ -89,14 +89,17 @@ public class Forwarder implements Runnable {
 	public Face createFace(FaceUri uri, OnFaceConnected onFaceConnected, OnFaceConnectionFailed onFaceConnectionFailed) {
 		for (ProtocolFactory factory : protocols) {
 			if (factory.scheme().equals(uri.getScheme())) {
-				return factory.createFace(uri, onFaceConnected, onFaceConnectionFailed);
+				factory.createFace(uri, onFaceConnected, onFaceConnectionFailed);
+				// TODO return the face
+				return null;
 			}
 		}
 		throw new IllegalArgumentException("No protocol found for uri: " + uri);
 	}
 
 	public Face destroyFace(FaceUri uri) {
-		protocols.
+		// TODO
+		return null;
 	}
 
 	public List<Face> listFaces() {
