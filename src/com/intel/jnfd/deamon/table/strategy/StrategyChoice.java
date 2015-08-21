@@ -5,6 +5,7 @@
  */
 package com.intel.jnfd.deamon.table.strategy;
 
+import com.intel.jndn.forwarder.api.StrategyChoiceTable;
 import com.intel.jndn.forwarder.api.Strategy;
 import com.intel.jnfd.deamon.table.HashMapRepo;
 import com.intel.jnfd.deamon.table.Pair;
@@ -18,16 +19,18 @@ import net.named_data.jndn.Name;
  *
  * @author zht
  */
-public class StrategyChoice {
+public class StrategyChoice implements StrategyChoiceTable {
 
 	public StrategyChoice(Strategy defaultStrategy) {
 		setDefaultStrategy(defaultStrategy);
 	}
 
+	@Override
 	public int size() {
 		return strategyChoice.size();
 	}
 
+	@Override
 	public boolean hasStrategy(Name strategyName, boolean isExact) {
 		if (isExact) {
 			return strategyInstances.containsKey(strategyName);
@@ -36,6 +39,7 @@ public class StrategyChoice {
 		}
 	}
 
+	@Override
 	public boolean install(Strategy strategy) {
 		Name strategyName = strategy.getName();
 		if (hasStrategy(strategyName, true)) {
@@ -72,6 +76,7 @@ public class StrategyChoice {
 	 entry.setStrategy(strategy);
 	 return true;
 	 }*/
+	@Override
 	public boolean insert(Name prefix, Name strategyName) {
 		Strategy strategy = getStrategy(strategyName);
 		if (strategy == null) { // the strategyName does not exist
@@ -108,6 +113,7 @@ public class StrategyChoice {
 	 strategyChoiceEntry, oldStrategy, parentStrategy);
 	 strategyChoice.erase(prefix);
 	 }*/
+	@Override
 	public void erase(Name prefix) {
 		// The root strategy should not be erased.
 		if (prefix.size() == 0) {
@@ -117,6 +123,7 @@ public class StrategyChoice {
 		strategyChoice.erase(prefix);
 	}
 
+	@Override
 	public Collection<StrategyChoiceEntry> list() {
 		return strategyChoice.values();
 	}
@@ -136,6 +143,7 @@ public class StrategyChoice {
 		return new Pair(strategyChoiceEntry.getStrategyName(), true);
 	}
 
+	@Override
 	public Strategy findEffectiveStrategy(Name prefix) {
 		StrategyChoiceEntry strategyChoiceEntry
 				= strategyChoice.findLongestPrefixMatch(prefix);

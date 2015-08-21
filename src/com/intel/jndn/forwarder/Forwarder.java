@@ -14,6 +14,7 @@ import com.intel.jnfd.deamon.face.FaceUri;
 import com.intel.jndn.forwarder.api.ProtocolFactory;
 import com.intel.jnfd.deamon.fw.BestRouteStrategy;
 import com.intel.jndn.forwarder.api.Strategy;
+import com.intel.jndn.forwarder.api.StrategyChoiceTable;
 import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
 import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnFailed;
@@ -30,6 +31,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
@@ -45,22 +48,26 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 	private final FaceInformationBase fib;
 	private final ContentStore cs;
 	private final FaceManager fm;
-	private final StrategyChoice strategies;
+	private final StrategyChoiceTable sct;
 
 	public Forwarder() {
-		this(Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors()), null, null, null, new ArrayList(), new StrategyChoice(new BestRouteStrategy(null, new Name())));
+		this(Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors()), null, null, null, new ArrayList(), new ArrayList());
 	}
 
-	public Forwarder(ScheduledExecutorService pool, PendingInterestTable pit, FaceInformationBase fib, ContentStore cs, List<ProtocolFactory> protocols, StrategyChoice strategies) {
+	public Forwarder(ScheduledExecutorService pool, PendingInterestTable pit, FaceInformationBase fib, ContentStore cs, List<ProtocolFactory> protocols, List<Strategy> strategies) {
 		this.pool = pool;
 		this.pit = pit;
 		this.fib = fib;
 		this.cs = cs;
-		this.fm = new DefaultFaceManager(pool);
-		this.strategies = strategies;
 
+		this.fm = new DefaultFaceManager(pool);
 		for (ProtocolFactory protocolFactory : protocols) {
 			fm.registerProtocol(protocolFactory);
+		}
+
+		this.sct = new StrategyChoice(new BestRouteStrategy(this, new Name("/")));
+		for (Strategy strategy : strategies) {
+			sct.install(strategy);
 		}
 	}
 
@@ -89,17 +96,17 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 		return fib.list();
 	}
 
-	public void setStrategy(Name name, Strategy strategy) {
+	public void setStrategy(Name prefix, Name strategy) {
 		// TODO change strategies to accept Strategy, not Name
-		strategies.insert(name, strategy.getName());
+		sct.insert(prefix, strategy);
 	}
 
-	public void unsetStrategy(Name name) {
-		strategies.erase(name);
+	public void unsetStrategy(Name prefix) {
+		sct.erase(prefix);
 	}
 
 	public Collection<StrategyChoiceEntry> listStrategies() {
-		return strategies.list();
+		return sct.list();
 	}
 
 	public void createFace(FaceUri uri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed) {
@@ -128,9 +135,11 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 	public void onInterest(Interest interest, final Face face) {
 		try {
 			cs.find(interest, new SearchCsCallback() {
+				
 				@Override
 				public void hitCallback(Interest interest, Data data) {
 					try {
+						// TODO erase PIT entries
 						face.sendData(data);
 					} catch (IOException ex) {
 						// TODO push exception up appropriately
@@ -141,7 +150,15 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 				@Override
 				public void missCallback(Interest interest) {
 					pit.insert(interest);
-					// TODO forward to other faces determined by strategy
+
+					for (Face face : sct.findEffectiveStrategy(interest.getName()).determineOutgoingFaces(interest, Forwarder.this)) {
+						try {
+							face.sendInterest(interest);
+						} catch (IOException ex) {
+							// TODO push exception up appropriately
+							throw new RuntimeException(ex);
+						}
+					}
 				}
 			});
 		} catch (Exception ex) {
