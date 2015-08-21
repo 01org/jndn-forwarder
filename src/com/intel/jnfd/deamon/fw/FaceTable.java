@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.fw;
 
-import com.intel.jnfd.deamon.face.Face;
+import com.intel.jnfd.deamon.face.AbstractFace;
 import java.util.Map;
 
 /**
@@ -31,7 +31,7 @@ public class FaceTable {
     }
 
     //TODO: question, where does the initial faceId come from?
-    public void add(Face face) {
+    public void add(AbstractFace face) {
         if (face.getFaceId() != INVALID_FACEID && faces.get(face.getFaceId()) != null) {
             return;
         }
@@ -42,14 +42,14 @@ public class FaceTable {
         addImp(face, faceId);
     }
 
-    public void addImp(Face face, int faceId) {
+    public void addImp(AbstractFace face, int faceId) {
         face.setFaceId(faceId);
         faces.put(faceId, face);
 
     }
 
-    // add a special Face with a reserved FaceId
-    public void addReserved(Face face, int faceId) {
+    // add a special AbstractFace with a reserved FaceId
+    public void addReserved(AbstractFace face, int faceId) {
         if (face.getFaceId() != INVALID_FACEID 
                 || faces.get(face.getFaceId()) != null
                 || faceId > FACEID_RESERVED_MAX) {
@@ -58,7 +58,7 @@ public class FaceTable {
         addImp(face, faceId);
     }
 
-    public Face get(int faceId) {
+    public AbstractFace get(int faceId) {
         return faces.get(faceId);
     }
 
@@ -68,7 +68,7 @@ public class FaceTable {
 
     // remove is private because it's a handler of face.onFail signal.
     // face->close() closes the face and triggers .remove()
-    private void remove(Face face, String reason) {
+    private void remove(AbstractFace face, String reason) {
 
         int faceId = face.getFaceId();
         faces.remove(faceId);
@@ -79,5 +79,5 @@ public class FaceTable {
 
     private Forwarder forwarder;
     private int lastFaceId;
-    private Map<Integer, Face> faces;
+    private Map<Integer, AbstractFace> faces;
 }

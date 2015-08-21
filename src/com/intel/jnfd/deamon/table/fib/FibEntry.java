@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.table.fib;
 
-import com.intel.jnfd.deamon.face.Face;
+import com.intel.jnfd.deamon.face.AbstractFace;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Vector;
@@ -33,11 +33,11 @@ public class FibEntry {
         return nextHopList.isEmpty();
     }
     
-    public boolean hasNextHop(Face face) {
+    public boolean hasNextHop(AbstractFace face) {
         return findNextHop(face) != null;
     }
     
-    public void addNextHop(Face face, long cost) {
+    public void addNextHop(AbstractFace face, long cost) {
         FibNextHop nextHop = findNextHop(face);
         if (nextHop == null) {
             nextHopList.add(new FibNextHop(face, cost));
@@ -47,7 +47,7 @@ public class FibEntry {
         sortNextHops();
     }
     
-    public void removeNextHop(Face face) {
+    public void removeNextHop(AbstractFace face) {
         FibNextHop nextHop = findNextHop(face);
         if (nextHop != null) {
             nextHopList.remove(nextHop);
@@ -58,7 +58,7 @@ public class FibEntry {
         Collections.sort(nextHopList);
     }
     
-    private FibNextHop findNextHop(Face face) {
+    private FibNextHop findNextHop(AbstractFace face) {
         Iterator<FibNextHop> iterator = nextHopList.iterator();
         while (iterator.hasNext()) {
             FibNextHop next = iterator.next();

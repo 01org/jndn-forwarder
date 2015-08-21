@@ -5,6 +5,7 @@
  */
 package com.intel.jnfd.deamon.face;
 
+import com.intel.jndn.forwarder.api.Face;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 
@@ -12,7 +13,7 @@ import net.named_data.jndn.Interest;
  *
  * @author zht
  */
-public abstract class Face {
+public abstract class AbstractFace implements Face {
 
     /**
      *
@@ -21,7 +22,7 @@ public abstract class Face {
      * @param isLocal
      * @param isMultiAccess
      */
-    public Face(FaceUri localUri, FaceUri remoteUri, boolean isLocal, boolean isMultiAccess) {
+    public AbstractFace(FaceUri localUri, FaceUri remoteUri, boolean isLocal, boolean isMultiAccess) {
         this.localUri = localUri;
         this.remoteUri = remoteUri;
         this.isLocal = isLocal;
@@ -76,7 +77,7 @@ public abstract class Face {
     
     @Override
     public boolean equals(Object o) {
-        Face other = (Face) o;
+        AbstractFace other = (AbstractFace) o;
         if(localUri.equals(other.getLocalUri())
                 && remoteUri.equals(other.getRemoteUri())
                 && other.isLocal() == isLocal

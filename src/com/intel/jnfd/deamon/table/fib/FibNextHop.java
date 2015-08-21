@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.table.fib;
 
-import com.intel.jnfd.deamon.face.Face;
+import com.intel.jnfd.deamon.face.AbstractFace;
 
 /**
  *
@@ -13,16 +13,16 @@ import com.intel.jnfd.deamon.face.Face;
  */
 public class FibNextHop implements Comparable{
     
-    public FibNextHop(Face face) {
+    public FibNextHop(AbstractFace face) {
         this.face = face;
     }
     
-    public FibNextHop(Face face, long cost) {
+    public FibNextHop(AbstractFace face, long cost) {
         this.face = face;
         this.cost = cost;
     }
 
-    public Face getFace() {
+    public AbstractFace getFace() {
         return face;
     }
 
@@ -35,7 +35,7 @@ public class FibNextHop implements Comparable{
     }
     
     
-    private Face face;
+    private AbstractFace face;
     private long cost;
 
     @Override

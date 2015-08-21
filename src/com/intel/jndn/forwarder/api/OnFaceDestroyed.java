@@ -3,15 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.intel.jndn.forwarder.api.callbacks;
-
-import com.intel.jnfd.deamon.face.AbstractFace;
-import net.named_data.jndn.Interest;
+package com.intel.jndn.forwarder.api;
 
 /**
  *
  * @author Andrew Brown <andrew.brown@intel.com>
  */
-public interface OnInterestReceived {
-	public void onInterest(Interest interest, AbstractFace face);
+public interface OnFaceDestroyed {
+	public void onDestroyed(Face face);
 }

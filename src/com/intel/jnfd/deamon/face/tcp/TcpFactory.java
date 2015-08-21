@@ -5,12 +5,14 @@
  */
 package com.intel.jnfd.deamon.face.tcp;
 
-import com.intel.jnfd.deamon.face.Channel;
-import com.intel.jndn.forwarder.api.callbacks.OnFaceConnectionFailed;
-import com.intel.jndn.forwarder.api.callbacks.OnFaceConnected;
+import com.intel.jndn.forwarder.api.Channel;
+import com.intel.jndn.forwarder.api.Face;
+import com.intel.jnfd.deamon.face.AbstractChannel;
 import com.intel.jnfd.deamon.face.FaceUri;
 import com.intel.jnfd.deamon.face.ParseFaceUriException;
-import com.intel.jnfd.deamon.face.ProtocolFactory;
+import com.intel.jndn.forwarder.api.ProtocolFactory;
+import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
+import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.channels.AsynchronousChannelGroup;
@@ -26,7 +28,7 @@ import java.util.logging.Logger;
  *
  * @author zht
  */
-public class TcpFactory extends ProtocolFactory {
+public class TcpFactory implements ProtocolFactory {
 
 	public TcpFactory(AsynchronousChannelGroup asynchronousChannelGroup) throws IOException {
 
@@ -69,26 +71,7 @@ public class TcpFactory extends ProtocolFactory {
 		return channelMap.get(uri);
 	}
 
-	@Override
-	public void createFace(FaceUri faceUri, OnFaceConnected faceCreatedCallback,
-			OnFaceConnectionFailed faceConnectFailedCallback) {
-		for (Map.Entry<FaceUri, TcpChannel> entry : channelMap.entrySet()) {
-			if ((!entry.getKey().getIsV6()) && (!faceUri.getIsV6())
-					|| entry.getKey().getIsV6() && faceUri.getIsV6()) {
-				try {
-					entry.getValue().connect(faceUri, faceCreatedCallback,
-							faceConnectFailedCallback);
-				} catch (IOException | InterruptedException | ExecutionException ex) {
-					Logger.getLogger(TcpFactory.class.getName()).log(Level.SEVERE, null, ex);
-				}
-				return;
-			}
-		}
-		faceConnectFailedCallback.onConnectionFailure(faceUri, new IOException("No channels available to connect to for " + faceUri));
-	}
-
-	@Override
-	public List<? extends Channel> getChannels() {
+	public List<? extends AbstractChannel> getChannels() {
 		List<TcpChannel> result = new ArrayList<>();
 		for (Map.Entry<FaceUri, TcpChannel> entry : channelMap.entrySet()) {
 			result.add(entry.getValue());
@@ -104,4 +87,41 @@ public class TcpFactory extends ProtocolFactory {
 //    private Set<Node> prohibitedNodes = new HashSet<Node>();
 //    TODO: if the prohibition function is necessary, we can implement this funtion 
 //    in the future;
+
+	@Override
+	public FaceUri defaultLocalUri() {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
+	@Override
+	public void createChannel(FaceUri faceUri, OnCompleted<Channel> onChannelCreated, OnFailed onChannelCreationFailed) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
+	@Override
+	public void destroyChannel(FaceUri faceUri, OnCompleted<Channel> onChannelDestroyed, OnFailed onChannelDestructionFailure) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
+	@Override
+	public void createFace(FaceUri faceUri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed) {
+		for (Map.Entry<FaceUri, TcpChannel> entry : channelMap.entrySet()) {
+			if ((!entry.getKey().getIsV6()) && (!faceUri.getIsV6())
+					|| entry.getKey().getIsV6() && faceUri.getIsV6()) {
+				try {
+					entry.getValue().connect(faceUri, onFaceCreated,
+							onFaceCreationFailed);
+				} catch (IOException | InterruptedException | ExecutionException ex) {
+					Logger.getLogger(TcpFactory.class.getName()).log(Level.SEVERE, null, ex);
+				}
+				return;
+			}
+		}
+		onFaceCreationFailed.onFailed(new IOException("No channels available to connect to for " + faceUri));
+	}
+
+	@Override
+	public void destroyFace(FaceUri faceUri, OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
 }

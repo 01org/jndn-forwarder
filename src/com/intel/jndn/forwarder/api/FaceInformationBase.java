@@ -7,7 +7,6 @@ package com.intel.jndn.forwarder.api;
 
 import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
-import com.intel.jnfd.deamon.face.FaceUri;
 import com.intel.jnfd.deamon.table.fib.FibEntry;
 import net.named_data.jndn.Name;
 
@@ -17,7 +16,7 @@ import net.named_data.jndn.Name;
  */
 public interface FaceInformationBase extends OnInterestReceived, OnDataReceived {
 	
-	public FibEntry insert(Name prefix, FaceUri uri, int cost);
+	public FibEntry insert(Name prefix, Face face, int cost);
 	
 	public FibEntry[] remove(Name prefix);
 	

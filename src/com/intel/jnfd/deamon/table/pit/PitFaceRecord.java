@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.table.pit;
 
-import com.intel.jnfd.deamon.face.Face;
+import com.intel.jnfd.deamon.face.AbstractFace;
 import com.intel.jnfd.deamon.table.strategy.StrategyInfoHost;
 import com.intel.jnfd.util.NfdCommon;
 import net.named_data.jndn.Interest;
@@ -16,14 +16,14 @@ import net.named_data.jndn.Interest;
  */
 public class PitFaceRecord extends StrategyInfoHost {
 
-    public PitFaceRecord(Face face) {
+    public PitFaceRecord(AbstractFace face) {
         this.face = face;
         lastNonce = 0;
         lastRenewed = 0;
         expiry = 0;
     }
 
-    public Face getFace() {
+    public AbstractFace getFace() {
         return face;
     }
 
@@ -71,7 +71,7 @@ public class PitFaceRecord extends StrategyInfoHost {
     }
 
     private String lastNonceStr; //This is another way of recording nonce.
-    private Face face;
+    private AbstractFace face;
     private long lastNonce;
     private long lastRenewed;
     private long expiry;

@@ -5,10 +5,12 @@
  */
 package com.intel.jnfd.deamon.face.tcp;
 
-import com.intel.jnfd.deamon.face.Channel;
-import com.intel.jnfd.deamon.face.Face;
-import com.intel.jndn.forwarder.api.callbacks.OnFaceConnectionFailed;
-import com.intel.jndn.forwarder.api.callbacks.OnFaceConnected;
+import com.intel.jndn.forwarder.api.Channel;
+import com.intel.jndn.forwarder.api.Face;
+import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
+import com.intel.jnfd.deamon.face.AbstractChannel;
+import com.intel.jnfd.deamon.face.AbstractFace;
+import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jnfd.deamon.face.FaceUri;
 import com.intel.jnfd.deamon.face.ParseFaceUriException;
 import java.io.IOException;
@@ -29,12 +31,12 @@ import java.util.logging.Logger;
  *
  * @author zht
  */
-public class TcpChannel extends Channel {
+public class TcpChannel extends AbstractChannel {
 
 	TcpChannel(FaceUri uri, AsynchronousChannelGroup asynchronousChannelGroup)
 			throws IOException {
-		setUri(uri);
-		mAddr = new InetSocketAddress(getUri().getInet(), getUri().getPort());
+		localUri(uri);
+		mAddr = new InetSocketAddress(localUri().getInet(), localUri().getPort());
 		this.asynchronousChannelGroup = asynchronousChannelGroup;
 		asynchronousServerSocket
 				= AsynchronousServerSocketChannel.open(asynchronousChannelGroup);
@@ -45,21 +47,21 @@ public class TcpChannel extends Channel {
 		return faceMap.size();
 	}
 
-	public void connect(FaceUri faceUri, OnFaceConnected faceCreatedCallback,
-			OnFaceConnectionFailed faceConnectFailedCallback)
+	public void connect(FaceUri faceUri, OnCompleted<Face> onFaceConnected,
+			OnFailed onFailure)
 			throws IOException, InterruptedException, ExecutionException {
-		connect(faceUri, faceCreatedCallback, faceConnectFailedCallback,
+		connect(faceUri, onFaceConnected, onFailure,
 				TimeUnit.SECONDS.toSeconds(4));
 	}
 
-	public void connect(FaceUri faceUri, OnFaceConnected faceCreatedCallback,
-			OnFaceConnectionFailed faceConnectFailedCallback, long timeout)
+	public void connect(FaceUri faceUri, OnCompleted<Face> onFaceConnected,
+			OnFailed onFailure, long timeout)
 			throws IOException, InterruptedException, ExecutionException {
 		InetSocketAddress remoteAddr
 				= new InetSocketAddress(faceUri.getInet(), faceUri.getPort());
-		Face face = faceMap.get(remoteAddr);
+		AbstractFace face = faceMap.get(remoteAddr);
 		if (face != null) {
-			faceCreatedCallback.onConnected(face);
+			onFaceConnected.onCompleted(face);
 			return;
 		}
 //        System.out.println("try to connect " + remoteAddr.toString());
@@ -75,22 +77,32 @@ public class TcpChannel extends Channel {
 	 * Open the AsynchronousServerSocket to prepare to accept incoming
 	 * connections. This method only needs to be called once.
 	 *
-	 * @param faceCreatedCallback
-	 * @param connectFailedCallback
-	 * @throws IOException
+	 * @param onChannelCreated
+	 * @param onFailure
 	 */
-	public void open(OnFaceConnected faceCreatedCallback,
-			OnFaceConnectionFailed connectFailedCallback) throws IOException {
-//        System.out.println("start to accept incomming connections");
-		asynchronousServerSocket.bind(mAddr);
+	@Override
+	public void open(OnCompleted<Channel> onChannelCreated,
+			OnFailed onFailure) {
+
+		try {
+			asynchronousServerSocket.bind(mAddr);
+		} catch (IOException ex) {
+			onFailure.onFailed(ex);
+			return;
+		}
+
 		AcceptAttachment attach = new AcceptAttachment();
 		asynchronousServerSocket.accept(attach, new AcceptHandler());
-//        System.out.println("Done: start to accept incomming connections");
 	}
 
 	public TcpFace getFace(String remoteIP, int remotePort) {
 		InetSocketAddress remoteSocket = new InetSocketAddress(remoteIP, remotePort);
 		return faceMap.get(remoteSocket);
+	}
+
+	@Override
+	public void close(OnCompleted<Channel> onChannelClosed, OnFailed onFailed) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
 	/**

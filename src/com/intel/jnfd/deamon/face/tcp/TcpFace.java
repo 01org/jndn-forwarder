@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.face.tcp;
 
-import com.intel.jnfd.deamon.face.Face;
+import com.intel.jnfd.deamon.face.AbstractFace;
 import com.intel.jnfd.deamon.face.FaceUri;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -26,7 +26,7 @@ import net.named_data.jndn.util.SignedBlob;
  *
  * @author zht
  */
-public class TcpFace extends Face {
+public class TcpFace extends AbstractFace {
 
     public TcpFace(FaceUri localUri, FaceUri remoteUri,
             AsynchronousSocketChannel asynchronousSocketChannel,

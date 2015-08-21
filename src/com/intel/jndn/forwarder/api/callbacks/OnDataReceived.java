@@ -5,7 +5,7 @@
  */
 package com.intel.jndn.forwarder.api.callbacks;
 
-import com.intel.jnfd.deamon.face.Face;
+import com.intel.jnfd.deamon.face.AbstractFace;
 import net.named_data.jndn.Data;
 
 /**
@@ -13,5 +13,5 @@ import net.named_data.jndn.Data;
  * @author Andrew Brown <andrew.brown@intel.com>
  */
 public interface OnDataReceived {
-	public void onData(Data data, Face incomingFace);
+	public void onData(Data data, AbstractFace incomingFace);
 }

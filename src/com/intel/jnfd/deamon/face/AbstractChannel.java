@@ -9,15 +9,16 @@ package com.intel.jnfd.deamon.face;
  *
  * @author zht
  */
-public class Channel {
+public abstract class AbstractChannel implements com.intel.jndn.forwarder.api.Channel{
 
-    public FaceUri getUri() {
-        return m_faceUri;
+	@Override
+    public FaceUri localUri() {
+        return localUri;
     }
     
-    protected void setUri(FaceUri faceUri) {
-        m_faceUri = faceUri;
+    protected void localUri(FaceUri localUri) {
+        this.localUri = localUri;
     }
     
-    private FaceUri m_faceUri;
+    private FaceUri localUri;
 }

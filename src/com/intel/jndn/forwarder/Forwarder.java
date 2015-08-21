@@ -8,19 +8,20 @@ package com.intel.jndn.forwarder;
 import com.intel.jndn.forwarder.api.FaceInformationBase;
 import com.intel.jndn.forwarder.api.PendingInterestTable;
 import com.intel.jndn.forwarder.api.ContentStore;
-import com.intel.jndn.forwarder.api.callbacks.OnFaceConnected;
-import com.intel.jndn.forwarder.api.callbacks.OnFaceConnectionFailed;
-import com.intel.jnfd.deamon.face.Face;
+import com.intel.jndn.forwarder.api.Face;
+import com.intel.jndn.forwarder.api.FaceManager;
 import com.intel.jnfd.deamon.face.FaceUri;
-import com.intel.jnfd.deamon.face.ProtocolFactory;
+import com.intel.jndn.forwarder.api.ProtocolFactory;
 import com.intel.jnfd.deamon.fw.BestRouteStrategy;
 import com.intel.jndn.forwarder.api.Strategy;
+import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
+import com.intel.jndn.forwarder.api.callbacks.OnFailed;
+import com.intel.jnfd.deamon.face.DefaultFaceManager;
 import com.intel.jnfd.deamon.table.fib.FibEntry;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoice;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoiceEntry;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -36,8 +37,7 @@ public class Forwarder implements Runnable {
 	private final PendingInterestTable pit;
 	private final FaceInformationBase fib;
 	private final ContentStore cs;
-	private final List<ProtocolFactory> protocols;
-	private final List<Face> faces;
+	private final FaceManager fm;
 	private final StrategyChoice strategies;
 
 	public Forwarder() {
@@ -49,8 +49,7 @@ public class Forwarder implements Runnable {
 		this.pit = pit;
 		this.fib = fib;
 		this.cs = cs;
-		this.protocols = protocols;
-		this.faces = new ArrayList();
+		this.fm = new DefaultFaceManager(pool);
 		this.strategies = strategies;
 	}
 
@@ -61,8 +60,14 @@ public class Forwarder implements Runnable {
 		}
 	}
 
-	public FibEntry addNextHop(Name name, FaceUri uri, int cost) {
-		return fib.insert(name, uri, cost);
+	public void addNextHop(final Name prefix, FaceUri uri, final int cost, final OnCompleted<FibEntry> onCompleted, OnFailed onFailed) {
+		fm.createFace(uri, new OnCompleted<Face>() {
+			@Override
+			public void onCompleted(Face face) {
+				FibEntry entry = fib.insert(prefix, face, cost);
+				onCompleted.onCompleted(entry);
+			}
+		}, onFailed);
 	}
 
 	public void removeNextHop(Name name, FaceUri uri) {
@@ -86,23 +91,15 @@ public class Forwarder implements Runnable {
 		return strategies.list();
 	}
 
-	public Face createFace(FaceUri uri, OnFaceConnected onFaceConnected, OnFaceConnectionFailed onFaceConnectionFailed) {
-		for (ProtocolFactory factory : protocols) {
-			if (factory.scheme().equals(uri.getScheme())) {
-				factory.createFace(uri, onFaceConnected, onFaceConnectionFailed);
-				// TODO return the face
-				return null;
-			}
-		}
-		throw new IllegalArgumentException("No protocol found for uri: " + uri);
+	public void createFace(FaceUri uri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed) {
+		fm.createFace(uri, onFaceCreated, onFaceCreationFailed);
 	}
 
-	public Face destroyFace(FaceUri uri) {
-		// TODO
-		return null;
+	public void destroyFace(FaceUri uri, OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed) {
+		fm.destroyFace(uri, onFaceDestroyed, onFaceDestructionFailed);
 	}
 
 	public List<Face> listFaces() {
-		return Collections.unmodifiableList(faces);
+		return fm.listFaces();
 	}
 }

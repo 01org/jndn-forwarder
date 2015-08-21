@@ -6,7 +6,7 @@
 package com.intel.jndn.forwarder;
 
 import com.intel.jndn.forwarder.impl.ImplementationLoader;
-import com.intel.jnfd.deamon.face.ProtocolFactory;
+import com.intel.jndn.forwarder.api.ProtocolFactory;
 import com.intel.jndn.forwarder.api.Strategy;
 import java.io.IOException;
 import java.util.List;

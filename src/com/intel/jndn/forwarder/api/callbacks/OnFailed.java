@@ -5,13 +5,12 @@
  */
 package com.intel.jndn.forwarder.api.callbacks;
 
-import com.intel.jnfd.deamon.face.Face;
-
 /**
  *
- * @author zht
+ * @author Andrew Brown <andrew.brown@intel.com>
+ * @param <T>
  */
-public interface OnFaceConnected {
+public interface OnFailed<T extends Throwable> {
 
-    public void onConnected(Face face);
+	public void onFailed(T error);
 }
