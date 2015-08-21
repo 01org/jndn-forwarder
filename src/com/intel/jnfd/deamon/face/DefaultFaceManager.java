@@ -10,7 +10,9 @@ import com.intel.jndn.forwarder.api.Face;
 import com.intel.jndn.forwarder.api.FaceManager;
 import com.intel.jndn.forwarder.api.ProtocolFactory;
 import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
+import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnFailed;
+import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.tcp.TcpChannel;
 import com.intel.jnfd.deamon.face.tcp.TcpFactory;
 import java.io.IOException;
@@ -101,7 +103,7 @@ public class DefaultFaceManager implements FaceManager {
 	}
 
 	@Override
-	public void createFace(FaceUri uri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed) {
+	public void createFace(FaceUri uri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed, OnDataReceived onDataReceived, OnInterestReceived onInterestReceived) {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 

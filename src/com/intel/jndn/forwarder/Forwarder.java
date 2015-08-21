@@ -15,23 +15,30 @@ import com.intel.jndn.forwarder.api.ProtocolFactory;
 import com.intel.jnfd.deamon.fw.BestRouteStrategy;
 import com.intel.jndn.forwarder.api.Strategy;
 import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
+import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnFailed;
+import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.DefaultFaceManager;
+import com.intel.jnfd.deamon.table.cs.SearchCsCallback;
 import com.intel.jnfd.deamon.table.fib.FibEntry;
+import com.intel.jnfd.deamon.table.pit.PitEntry;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoice;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoiceEntry;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import net.named_data.jndn.Data;
+import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
 
 /**
  *
  * @author Andrew Brown <andrew.brown@intel.com>
  */
-public class Forwarder implements Runnable {
+public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 
 	private final ScheduledExecutorService pool;
 	private final PendingInterestTable pit;
@@ -51,6 +58,10 @@ public class Forwarder implements Runnable {
 		this.cs = cs;
 		this.fm = new DefaultFaceManager(pool);
 		this.strategies = strategies;
+
+		for (ProtocolFactory protocolFactory : protocols) {
+			fm.registerProtocol(protocolFactory);
+		}
 	}
 
 	@Override
@@ -61,7 +72,7 @@ public class Forwarder implements Runnable {
 	}
 
 	public void addNextHop(final Name prefix, FaceUri uri, final int cost, final OnCompleted<FibEntry> onCompleted, OnFailed onFailed) {
-		fm.createFace(uri, new OnCompleted<Face>() {
+		createFace(uri, new OnCompleted<Face>() {
 			@Override
 			public void onCompleted(Face face) {
 				FibEntry entry = fib.insert(prefix, face, cost);
@@ -92,7 +103,7 @@ public class Forwarder implements Runnable {
 	}
 
 	public void createFace(FaceUri uri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed) {
-		fm.createFace(uri, onFaceCreated, onFaceCreationFailed);
+		fm.createFace(uri, onFaceCreated, onFaceCreationFailed, this, this);
 	}
 
 	public void destroyFace(FaceUri uri, OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed) {
@@ -101,5 +112,41 @@ public class Forwarder implements Runnable {
 
 	public List<Face> listFaces() {
 		return fm.listFaces();
+	}
+
+	@Override
+	public void onData(Data data, Face incomingFace) {
+		List<PitEntry> matches = pit.findAllMatches(data);
+		for (PitEntry entry : matches) {
+			// TODO: satisfy interests here
+		}
+
+		cs.insert(data, matches.isEmpty());
+	}
+
+	@Override
+	public void onInterest(Interest interest, final Face face) {
+		try {
+			cs.find(interest, new SearchCsCallback() {
+				@Override
+				public void hitCallback(Interest interest, Data data) {
+					try {
+						face.sendData(data);
+					} catch (IOException ex) {
+						// TODO push exception up appropriately
+						throw new RuntimeException(ex);
+					}
+				}
+
+				@Override
+				public void missCallback(Interest interest) {
+					pit.insert(interest);
+					// TODO forward to other faces determined by strategy
+				}
+			});
+		} catch (Exception ex) {
+			// TODO push exception up appropriately
+			throw new RuntimeException(ex);
+		}
 	}
 }

@@ -6,7 +6,9 @@
 package com.intel.jndn.forwarder.api;
 
 import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
+import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnFailed;
+import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.FaceUri;
 import java.util.List;
 
@@ -26,7 +28,7 @@ public interface FaceManager {
 
 	public Channel destroyChannel(FaceUri localUri);
 
-	public void createFace(FaceUri uri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed);
+	public void createFace(FaceUri uri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed, OnDataReceived onDataReceived, OnInterestReceived onInterestReceived);
 
 	public List<Face> listFaces();
 
