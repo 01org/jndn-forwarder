@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.table.cs;
 
-import com.intel.jnfd.deamon.face.Face;
+import com.intel.jndn.forwarder.api.Face;
 import com.intel.jnfd.deamon.table.pit.PitEntry;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;

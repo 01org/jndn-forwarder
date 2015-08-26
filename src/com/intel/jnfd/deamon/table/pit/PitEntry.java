@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.table.pit;
 
-import com.intel.jnfd.deamon.face.AbstractFace;
+import com.intel.jndn.forwarder.api.Face;
 import com.intel.jnfd.deamon.table.strategy.StrategyInfoHost;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
@@ -60,7 +60,7 @@ public class PitEntry extends StrategyInfoHost {
      * @return true if OutRecord of this face does not exist or has expired, and
      * there is an InRecord not of this face, and scope is not violated
      */
-    public boolean canForwardTo(AbstractFace face) {
+    public boolean canForwardTo(Face face) {
         long currentTime = System.currentTimeMillis();
         boolean hasUnexpiredOutRecord = false;
 
@@ -99,11 +99,11 @@ public class PitEntry extends StrategyInfoHost {
      * @param face
      * @return true if scope control would be violated
      */
-    public boolean violatesScope(AbstractFace face) {
+    public boolean violatesScope(Face face) {
         return false;
     }
 
-    public int findNonce(Blob nonce, AbstractFace face) {
+    public int findNonce(Blob nonce, Face face) {
         // TODO should we ignore expired in/out records?
 
         int dnw = DUPLICATE_NONCE_NONE;
@@ -143,7 +143,7 @@ public class PitEntry extends StrategyInfoHost {
      * @param interest
      * @return
      */
-    public PitInRecord insertOrUpdateInRecord(AbstractFace face, Interest interest) {
+    public PitInRecord insertOrUpdateInRecord(Face face, Interest interest) {
         PitInRecord result = null;
         for (PitInRecord one : inRecords) {
             if (face.equals(one.getFace())) {
@@ -166,7 +166,7 @@ public class PitEntry extends StrategyInfoHost {
      * @param face
      * @return
      */
-    public PitInRecord getInRecord(AbstractFace face) {
+    public PitInRecord getInRecord(Face face) {
         for (PitInRecord one : inRecords) {
             if (face.equals(one.getFace())) {
                 return one;
@@ -191,7 +191,7 @@ public class PitEntry extends StrategyInfoHost {
      * @param interest
      * @return
      */
-    public PitOutRecord insertOrUpdateOutRecord(AbstractFace face, Interest interest) {
+    public PitOutRecord insertOrUpdateOutRecord(Face face, Interest interest) {
         PitOutRecord result = null;
         for (PitOutRecord one : outRecords) {
             if (face.equals(one.getFace())) {
@@ -214,7 +214,7 @@ public class PitEntry extends StrategyInfoHost {
      * @param face
      * @return
      */
-    public PitOutRecord getOutRecord(AbstractFace face) {
+    public PitOutRecord getOutRecord(Face face) {
         for (PitOutRecord one : outRecords) {
             if (face.equals(one.getFace())) {
                 return one;
@@ -223,7 +223,7 @@ public class PitEntry extends StrategyInfoHost {
         return null;
     }
 
-    public void deleteOutRecord(AbstractFace face) {
+    public void deleteOutRecord(Face face) {
         for (PitOutRecord one : outRecords) {
             if (face.equals(one.getFace())) {
                 outRecords.remove(one);

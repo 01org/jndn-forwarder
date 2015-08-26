@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.table.pit;
 
-import com.intel.jnfd.deamon.face.AbstractFace;
+import com.intel.jndn.forwarder.api.Face;
 
 /**
  *
@@ -13,7 +13,7 @@ import com.intel.jnfd.deamon.face.AbstractFace;
  */
 public class PitOutRecord extends PitFaceRecord{
 
-    public PitOutRecord(AbstractFace face) {
+    public PitOutRecord(Face face) {
         super(face);
     }
     

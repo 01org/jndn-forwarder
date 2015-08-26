@@ -12,7 +12,6 @@ import com.intel.jndn.forwarder.api.Face;
 import com.intel.jndn.forwarder.api.FaceManager;
 import com.intel.jnfd.deamon.face.FaceUri;
 import com.intel.jndn.forwarder.api.ProtocolFactory;
-import com.intel.jnfd.deamon.fw.BestRouteStrategy;
 import com.intel.jndn.forwarder.api.Strategy;
 import com.intel.jndn.forwarder.api.StrategyChoiceTable;
 import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
@@ -20,12 +19,10 @@ import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.DefaultFaceManager;
-import com.intel.jnfd.deamon.table.cs.SearchCsCallback;
 import com.intel.jnfd.deamon.table.fib.FibEntry;
 import com.intel.jnfd.deamon.table.pit.PitEntry;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoice;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoiceEntry;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -63,7 +60,7 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 			fm.registerProtocol(protocolFactory);
 		}
 
-		this.sct = new StrategyChoice(new BestRouteStrategy(this, new Name("/")));
+		this.sct = null; // new StrategyChoice(new BestRouteStrategy2(this, new Name("/")));
 		for (Strategy strategy : strategies) {
 			sct.install(strategy);
 		}
@@ -137,38 +134,38 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 
 	@Override
 	public void onInterest(Interest interest, final Face face) {
-		try {
-			cs.find(interest, new SearchCsCallback() {
-
-				@Override
-				public void hitCallback(Interest interest, Data data) {
-					try {
-						// TODO erase PIT entries
-						face.sendData(data);
-					} catch (IOException ex) {
-						// TODO push exception up appropriately
-						throw new RuntimeException(ex);
-					}
-				}
-
-				@Override
-				public void missCallback(Interest interest) {
-					pit.insert(interest);
-
-					for (Face face : sct.findEffectiveStrategy(interest.getName()).determineOutgoingFaces(interest, Forwarder.this)) {
-						// TODO check nonces for loops
-						try {
-							face.sendInterest(interest);
-						} catch (IOException ex) {
-							// TODO push exception up appropriately
-							throw new RuntimeException(ex);
-						}
-					}
-				}
-			});
-		} catch (Exception ex) {
-			// TODO push exception up appropriately
-			throw new RuntimeException(ex);
-		}
+//		try {
+//			cs.find(interest, new SearchCsCallback() {
+//
+//				@Override
+//				public void hitCallback(Interest interest, Data data) {
+//					try {
+//						// TODO erase PIT entries
+//						face.sendData(data);
+//					} catch (IOException ex) {
+//						// TODO push exception up appropriately
+//						throw new RuntimeException(ex);
+//					}
+//				}
+//
+//				@Override
+//				public void missCallback(Interest interest) {
+//					pit.insert(interest);
+//
+//					for (Face face : sct.findEffectiveStrategy(interest.getName()).determineOutgoingFaces(interest, Forwarder.this)) {
+//						// TODO check nonces for loops
+//						try {
+//							face.sendInterest(interest);
+//						} catch (IOException ex) {
+//							// TODO push exception up appropriately
+//							throw new RuntimeException(ex);
+//						}
+//					}
+//				}
+//			});
+//		} catch (Exception ex) {
+//			// TODO push exception up appropriately
+//			throw new RuntimeException(ex);
+//		}
 	}
 }

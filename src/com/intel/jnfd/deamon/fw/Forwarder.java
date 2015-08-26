@@ -5,9 +5,11 @@
  */
 package com.intel.jnfd.deamon.fw;
 
-import com.intel.jnfd.deamon.face.Face;
-import com.intel.jnfd.deamon.table.cs.Cs;
+import com.intel.jndn.forwarder.api.ContentStore;
+import com.intel.jndn.forwarder.api.Face;
+import com.intel.jndn.forwarder.api.Strategy;
 import com.intel.jnfd.deamon.table.cs.SearchCsCallback;
+import com.intel.jnfd.deamon.table.cs.SortedSetCs;
 import com.intel.jnfd.deamon.table.deadnonce.DeadNonce;
 import com.intel.jnfd.deamon.table.deadnonce.DeadNonceNaive;
 import com.intel.jnfd.deamon.table.fib.Fib;
@@ -18,10 +20,13 @@ import com.intel.jnfd.deamon.table.pit.PitEntry;
 import com.intel.jnfd.deamon.table.pit.PitInRecord;
 import com.intel.jnfd.deamon.table.pit.PitOutRecord;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoice;
+import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
@@ -39,6 +44,7 @@ public class Forwarder implements SearchCsCallback {
         faceTable = new FaceTable(this);
         pit = new Pit();
         fib = new Fib();
+		cs = new SortedSetCs();
         measurement = new Measurement();
         strategyChoice = new StrategyChoice(new BestRouteStrategy2(this));
         // install more strategies into strategyChoice here
@@ -76,7 +82,7 @@ public class Forwarder implements SearchCsCallback {
         return pit;
     }
 
-    public Cs getCs() {
+    public ContentStore getCs() {
         return cs;
     }
 
@@ -159,7 +165,7 @@ public class Forwarder implements SearchCsCallback {
      * @param outFace
      * @param wantNewNonce
      */
-    protected void onOutgoingInterest(PitEntry pitEntry, Face outFace,
+    public void onOutgoingInterest(PitEntry pitEntry, Face outFace,
             boolean wantNewNonce) {
         if (outFace.getFaceId() == FaceTable.INVALID_FACEID) {
             return;
@@ -212,8 +218,12 @@ public class Forwarder implements SearchCsCallback {
         // insert OutRecord
         pitEntry.insertOrUpdateInRecord(outFace, interest);
 
-        // send Interest
-        outFace.sendInterest(interest);
+		try {
+			// send Interest
+			outFace.sendInterest(interest);
+		} catch (IOException ex) {
+			logger.log(Level.SEVERE, null, ex);
+		}
     }
 
     /**
@@ -221,7 +231,7 @@ public class Forwarder implements SearchCsCallback {
      *
      * @param pitEntry
      */
-    protected void onInterestReject(PitEntry pitEntry) {
+    public void onInterestReject(PitEntry pitEntry) {
 
         if (pitEntry.hasUnexpiredOutRecords()) {
             return;
@@ -426,10 +436,11 @@ public class Forwarder implements SearchCsCallback {
     //                = strategyChoice.findEffectiveStrategy(pitEntry.getName());
     //        trigger.trigger(effectiveStrategy);
     //    }
+	private static final Logger logger = Logger.getLogger(Forwarder.class.getName());
     private final FaceTable faceTable;
     private final Fib fib;
     private final Pit pit;
-    private Cs cs;
+    private final ContentStore cs;
     private final Measurement measurement;
     private final StrategyChoice strategyChoice;
     private final DeadNonce deadNonceList;

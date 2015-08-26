@@ -6,7 +6,7 @@
 package com.intel.jnfd.deamon.table.cs;
 
 import com.intel.jndn.forwarder.api.ContentStore;
-import com.intel.jnfd.deamon.face.Face;
+import com.intel.jndn.forwarder.api.Face;
 import com.intel.jnfd.deamon.table.pit.PitEntry;
 import com.intel.jnfd.util.NameUtil;
 import java.util.Iterator;
@@ -26,9 +26,12 @@ public class SortedSetCs implements ContentStore {
 		limit(maxNumberOfDataPackets);
 	}
 
+	public SortedSetCs() {
+	}
+
 	@Override
 	public boolean insert(Data data, boolean isUnsolicited) {
-        // TODO: recognize CachingPolicy
+		// TODO: recognize CachingPolicy
 		// this part should be added after the jNDN library add
 		// "LocalControlHeader" attribute
 		CsEntry csEntry = new CsEntry(data, isUnsolicited);
@@ -37,8 +40,8 @@ public class SortedSetCs implements ContentStore {
 	}
 
 	@Override
-    public void find(Face inFace, PitEntry pitEntry, 
-            Interest interest, SearchCsCallback searchCsCallback) throws Exception {
+	public void find(Face inFace, PitEntry pitEntry,
+			Interest interest, SearchCsCallback searchCsCallback) throws Exception {
 		Name prefix = interest.getName();
 		boolean isRightMost = (interest.getChildSelector() == 1);
 		CsEntry match = null;
@@ -48,11 +51,11 @@ public class SortedSetCs implements ContentStore {
 			match = findLeftMost(interest, prefix, NameUtil.getNameSuccessor(prefix));
 		}
 		if (match == null) {
-            searchCsCallback.onContentStoreMiss(inFace, pitEntry, interest);
+			searchCsCallback.onContentStoreMiss(inFace, pitEntry, interest);
 			return;
 		}
-        searchCsCallback.onContentStoreHit(inFace, pitEntry, interest, 
-                match.getData());
+		searchCsCallback.onContentStoreHit(inFace, pitEntry, interest,
+				match.getData());
 	}
 
 	@Override
@@ -61,7 +64,7 @@ public class SortedSetCs implements ContentStore {
 	}
 
 	private CsEntry findRightMost(Interest interest, Name first, Name last) throws Exception {
-        // Each loop visits a sub-namespace under a prefix one component longer than Interest Name.
+		// Each loop visits a sub-namespace under a prefix one component longer than Interest Name.
 		// If there is a match in that sub-namespace, the leftmost match is returned;
 		// otherwise, loop continues.
 		int interestNameLength = interest.getName().size();

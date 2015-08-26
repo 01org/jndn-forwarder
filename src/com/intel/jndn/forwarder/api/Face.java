@@ -24,6 +24,8 @@ public interface Face {
 	public void close();
 
 	public int getFaceId();
+	
+	public void setFaceId(int id);
 
 	public FaceUri getLocalUri();
 

@@ -6,6 +6,7 @@
 package com.intel.jndn.forwarder.api;
 
 import com.intel.jnfd.deamon.table.cs.SearchCsCallback;
+import com.intel.jnfd.deamon.table.pit.PitEntry;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
@@ -20,7 +21,7 @@ public interface ContentStore {
 
 	public void erase(Name exactName);
 
-	public void find(Interest interest, SearchCsCallback searchCsCallback) throws Exception;
+	public void find(Face inFace, PitEntry pitEntry, Interest interest, SearchCsCallback searchCsCallback) throws Exception;
 	
 	public int limit();
 	

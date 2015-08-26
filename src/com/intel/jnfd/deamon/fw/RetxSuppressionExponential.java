@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.fw;
 
-import com.intel.jnfd.deamon.face.Face;
+import com.intel.jndn.forwarder.api.Face;
 import com.intel.jnfd.deamon.table.pit.PitEntry;
 import java.util.logging.Level;
 import java.util.logging.Logger;

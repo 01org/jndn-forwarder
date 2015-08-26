@@ -5,7 +5,8 @@
  */
 package com.intel.jnfd.deamon.fw;
 
-import com.intel.jnfd.deamon.face.Face;
+import com.intel.jndn.forwarder.api.Face;
+import com.intel.jndn.forwarder.api.Strategy;
 import com.intel.jnfd.deamon.table.fib.FibEntry;
 import com.intel.jnfd.deamon.table.fib.FibNextHop;
 import com.intel.jnfd.deamon.table.pit.PitEntry;
@@ -28,7 +29,7 @@ import net.named_data.jndn.Name;
  */
 public class BestRouteStrategy2 extends Strategy {
 
-    public static final Name STRATEGY_NAME
+    public static final Name STRATEGY_NAME 
             = new Name("ndn:/localhost/nfd/strategy/best-route/%FD%03");
 
     /**
@@ -198,4 +199,9 @@ public class BestRouteStrategy2 extends Strategy {
 
     private RetxSuppressionExponential retxSuppression
             = new RetxSuppressionExponential();
+
+	@Override
+	public Face[] determineOutgoingFaces(Interest interest, Forwarder forwarder) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
 }

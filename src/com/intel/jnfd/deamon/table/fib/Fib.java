@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.table.fib;
 
-import com.intel.jnfd.deamon.face.AbstractFace;
+import com.intel.jndn.forwarder.api.Face;
 import com.intel.jnfd.deamon.table.HashMapRepo;
 import com.intel.jnfd.deamon.table.Pair;
 import java.util.Map;
@@ -49,7 +49,7 @@ public class Fib {
         fib.erase(entry.getPrefix());
     }
     
-    public void removeNextHop(Name prefix, AbstractFace face) {
+    public void removeNextHop(Name prefix, Face face) {
         FibEntry entry = fib.findExactMatch(prefix);
         if (entry == null) {
             return;
@@ -65,7 +65,7 @@ public class Fib {
         }
     }
     
-    public void removeNextHopFromAllEntries(AbstractFace face) {
+    public void removeNextHopFromAllEntries(Face face) {
         Set<Map.Entry<Name, FibEntry>> entrySet = fib.EntrySet();
         for (Map.Entry<Name, FibEntry> one : entrySet) {
             FibEntry fibEntry = one.getValue();

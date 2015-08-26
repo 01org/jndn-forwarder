@@ -5,7 +5,7 @@
  */
 package com.intel.jnfd.deamon.table.pit;
 
-import com.intel.jnfd.deamon.face.AbstractFace;
+import com.intel.jndn.forwarder.api.Face;
 import com.intel.jnfd.deamon.table.strategy.StrategyInfoHost;
 import com.intel.jnfd.util.NfdCommon;
 import net.named_data.jndn.Interest;
@@ -17,14 +17,14 @@ import net.named_data.jndn.util.Blob;
  */
 public class PitFaceRecord extends StrategyInfoHost {
 
-    public PitFaceRecord(AbstractFace face) {
+    public PitFaceRecord(Face face) {
         this.face = face;
         lastNonce = new Blob();
         lastRenewed = 0;
         expiry = 0;
     }
 
-    public AbstractFace getFace() {
+    public Face getFace() {
         return face;
     }
 
@@ -62,7 +62,7 @@ public class PitFaceRecord extends StrategyInfoHost {
         expiry = lastRenewed + lifeTime;
     }
 
-    private AbstractFace face;
+    private Face face;
     private Blob lastNonce;
     private long lastRenewed;
     private long expiry;
