@@ -9,6 +9,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -134,13 +135,25 @@ public class FaceUri {
 
 	@Override
 	public boolean equals(Object o) {
-		FaceUri other = ((FaceUri) o);
-		if (scheme.equals(other.getScheme())
-				&& inet.equals(other.getInet())
-				&& other.getPort() == port) {
-			return true;
+		if (o instanceof FaceUri) {
+			FaceUri other = ((FaceUri) o);
+			if (scheme.equals(other.getScheme())
+					&& inet.equals(other.getInet())
+					&& other.getPort() == port) {
+				return true;
+			}
 		}
 		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		int hash = 7;
+		hash = 37 * hash + Objects.hashCode(this.scheme);
+		hash = 37 * hash + Objects.hashCode(this.host);
+		hash = 37 * hash + this.port;
+		hash = 37 * hash + (this.isV6 ? 1 : 0);
+		return hash;
 	}
 
 	@Override

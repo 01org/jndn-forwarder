@@ -5,11 +5,13 @@
  */
 package com.intel.jnfd.deamon.face;
 
+import com.intel.jndn.forwarder.api.Channel;
+
 /**
  *
  * @author zht
  */
-public abstract class AbstractChannel implements com.intel.jndn.forwarder.api.Channel{
+public abstract class AbstractChannel implements Channel{
 
 	@Override
     public FaceUri localUri() {

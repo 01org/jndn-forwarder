@@ -10,7 +10,7 @@ import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.FaceUri;
-import java.util.List;
+import java.util.Collection;
 
 /**
  *
@@ -20,18 +20,18 @@ public interface FaceManager {
 
 	public void registerProtocol(ProtocolFactory protocolFactory);
 
-	public List<ProtocolFactory> listProtocols();
+	public Collection<ProtocolFactory> listProtocols();
 
-	public Channel createChannel(FaceUri localUri);
+	public void createChannel(FaceUri localUri, OnCompleted<Channel> onChannelCreated, OnFailed onChannelCreationFailed, OnDataReceived onDataReceived, OnInterestReceived onInterestReceived);
 
-	public List<Channel> listChannels();
+	public Collection<Channel> listChannels();
 
-	public Channel destroyChannel(FaceUri localUri);
+	public void destroyChannel(FaceUri localUri, OnCompleted<Channel> onChannelCreated, OnFailed onChannelCreationFailed);
 
-	public void createFace(FaceUri uri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed, OnDataReceived onDataReceived, OnInterestReceived onInterestReceived);
+	public void createFace(FaceUri localUri, FaceUri remoteUri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed, OnDataReceived onDataReceived, OnInterestReceived onInterestReceived);
 
-	public List<Face> listFaces();
+	public Collection<Face> listFaces();
 
-	public void destroyFace(FaceUri uri, OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed);
+	public void destroyFace(FaceUri localUri, FaceUri remoteUri, OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed);
 
 }

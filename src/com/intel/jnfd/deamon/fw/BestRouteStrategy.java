@@ -5,8 +5,11 @@
  */
 package com.intel.jnfd.deamon.fw;
 
+import com.intel.jndn.forwarder.Forwarder;
+import com.intel.jndn.forwarder.api.Face;
 import com.intel.jndn.forwarder.api.Strategy;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
+import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
 
 /**
@@ -17,6 +20,11 @@ public class BestRouteStrategy extends Strategy {
 
 	public BestRouteStrategy(OnInterestReceived onInterestReceived, Name prefix) {
 		super(onInterestReceived, prefix);
+	}
+
+	@Override
+	public Face[] determineOutgoingFaces(Interest interest, Forwarder forwarder) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
 	public class BestRouteStrategyInfo extends StrategyInfo {

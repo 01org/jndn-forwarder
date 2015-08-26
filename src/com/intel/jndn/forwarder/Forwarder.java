@@ -31,8 +31,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
@@ -109,15 +107,21 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 		return sct.list();
 	}
 
-	public void createFace(FaceUri uri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed) {
-		fm.createFace(uri, onFaceCreated, onFaceCreationFailed, this, this);
+	public void createFace(FaceUri remoteUri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed) {
+		FaceUri localUri = findApplicableChannelUri(remoteUri);
+		fm.createFace(localUri, remoteUri, onFaceCreated, onFaceCreationFailed, this, this);
 	}
 
-	public void destroyFace(FaceUri uri, OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed) {
-		fm.destroyFace(uri, onFaceDestroyed, onFaceDestructionFailed);
+	public void destroyFace(FaceUri remoteUri, OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed) {
+		FaceUri localUri = findApplicableChannelUri(remoteUri);
+		fm.destroyFace(localUri, remoteUri, onFaceDestroyed, onFaceDestructionFailed);
 	}
 
-	public List<Face> listFaces() {
+	protected FaceUri findApplicableChannelUri(FaceUri remoteUri) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
+
+	public Collection<Face> listFaces() {
 		return fm.listFaces();
 	}
 
@@ -135,7 +139,7 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 	public void onInterest(Interest interest, final Face face) {
 		try {
 			cs.find(interest, new SearchCsCallback() {
-				
+
 				@Override
 				public void hitCallback(Interest interest, Data data) {
 					try {
@@ -152,6 +156,7 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 					pit.insert(interest);
 
 					for (Face face : sct.findEffectiveStrategy(interest.getName()).determineOutgoingFaces(interest, Forwarder.this)) {
+						// TODO check nonces for loops
 						try {
 							face.sendInterest(interest);
 						} catch (IOException ex) {
