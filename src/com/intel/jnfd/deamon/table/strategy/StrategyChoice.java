@@ -10,6 +10,7 @@ import com.intel.jndn.forwarder.api.Strategy;
 import com.intel.jnfd.deamon.table.HashMapRepo;
 import com.intel.jnfd.deamon.table.Pair;
 import java.util.Collection;
+import com.intel.jnfd.deamon.table.pit.PitEntry;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -197,4 +198,7 @@ public class StrategyChoice implements StrategyChoiceTable {
 			= new HashMapRepo<>();
 	private Map<Name, Strategy> strategyInstances = new ConcurrentSkipListMap<>();
 
+    public void findEffectiveStrategy(PitEntry pitEntry) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

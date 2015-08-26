@@ -6,6 +6,8 @@
 package com.intel.jnfd.deamon.table.cs;
 
 import com.intel.jndn.forwarder.api.ContentStore;
+import com.intel.jnfd.deamon.face.Face;
+import com.intel.jnfd.deamon.table.pit.PitEntry;
 import com.intel.jnfd.util.NameUtil;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -35,7 +37,8 @@ public class SortedSetCs implements ContentStore {
 	}
 
 	@Override
-	public void find(Interest interest, SearchCsCallback searchCsCallback) throws Exception {
+    public void find(Face inFace, PitEntry pitEntry, 
+            Interest interest, SearchCsCallback searchCsCallback) throws Exception {
 		Name prefix = interest.getName();
 		boolean isRightMost = (interest.getChildSelector() == 1);
 		CsEntry match = null;
@@ -45,10 +48,11 @@ public class SortedSetCs implements ContentStore {
 			match = findLeftMost(interest, prefix, NameUtil.getNameSuccessor(prefix));
 		}
 		if (match == null) {
-			searchCsCallback.missCallback(interest);
+            searchCsCallback.onContentStoreMiss(inFace, pitEntry, interest);
 			return;
 		}
-		searchCsCallback.hitCallback(interest, match.getData());
+        searchCsCallback.onContentStoreHit(inFace, pitEntry, interest, 
+                match.getData());
 	}
 
 	@Override

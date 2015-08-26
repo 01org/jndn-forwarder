@@ -69,7 +69,6 @@ public class FaceTable {
     // remove is private because it's a handler of face.onFail signal.
     // face->close() closes the face and triggers .remove()
     private void remove(AbstractFace face, String reason) {
-
         int faceId = face.getFaceId();
         faces.remove(faceId);
         face.setFaceId(INVALID_FACEID);

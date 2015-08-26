@@ -27,15 +27,15 @@ public class StrategyInfoHost {
         }
     }
 
-    public <T extends StrategyInfo> StrategyInfo getOrCreateStrategyInfo(Class<T> clazz)
+    public <T extends StrategyInfo> StrategyInfo getOrCreateStrategyInfo(
+            T newItem)
             throws InstantiationException, IllegalAccessException {
-        StrategyInfo item = clazz.newInstance();
-        StrategyInfo oldItem = items.get(item.getTypeId());
+        StrategyInfo oldItem = items.get(newItem.getTypeId());
         if (oldItem != null) {
             return oldItem;
         }
-        items.put(item.getTypeId(), item);
-        return item;
+        items.put(newItem.getTypeId(), newItem);
+        return newItem;
     }
 
     public void clearStrategyInfo() {
