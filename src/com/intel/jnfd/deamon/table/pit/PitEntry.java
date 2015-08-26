@@ -6,15 +6,18 @@
 package com.intel.jnfd.deamon.table.pit;
 
 import com.intel.jnfd.deamon.face.Face;
+import com.intel.jnfd.deamon.table.strategy.StrategyInfoHost;
 import java.util.List;
+import java.util.concurrent.ScheduledFuture;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
+import net.named_data.jndn.util.Blob;
 
 /**
  *
  * @author zht
  */
-public class PitEntry {
+public class PitEntry extends StrategyInfoHost {
 
     /**
      * indicates where duplicate Nonces are found
@@ -100,13 +103,13 @@ public class PitEntry {
         return false;
     }
 
-    public int findNonce(long nonce, Face face) {
+    public int findNonce(Blob nonce, Face face) {
         // TODO should we ignore expired in/out records?
 
         int dnw = DUPLICATE_NONCE_NONE;
 
         for (PitInRecord inRecord : inRecords) {
-            if (inRecord.getLastNonce() == nonce) {
+            if (inRecord.getLastNonce().equals(nonce)) {
                 if (face.equals(inRecord.getFace())) {
                     dnw |= DUPLICATE_NONCE_IN_SAME;
                 } else {
@@ -116,7 +119,7 @@ public class PitEntry {
         }
 
         for (PitOutRecord outRecord : outRecords) {
-            if (outRecord.getLastNonce() == nonce) {
+            if (outRecord.getLastNonce().equals(nonce)) {
                 if (face.equals(outRecord.getFace())) {
                     dnw |= DUPLICATE_NONCE_OUT_SAME;
                 } else {
@@ -186,7 +189,7 @@ public class PitEntry {
      *
      * @param face
      * @param interest
-     * @return 
+     * @return
      */
     public PitOutRecord insertOrUpdateOutRecord(Face face, Interest interest) {
         PitOutRecord result = null;
@@ -232,7 +235,7 @@ public class PitEntry {
     public boolean hasUnexpiredOutRecords() {
         long currentTime = System.currentTimeMillis();
         for (PitOutRecord one : outRecords) {
-            if(one.getExpiry() >= currentTime) {
+            if (one.getExpiry() >= currentTime) {
                 return true;
             }
         }
@@ -242,6 +245,9 @@ public class PitEntry {
     private Interest interest;
     private List<PitInRecord> inRecords;
     private List<PitOutRecord> outRecords;
+    
+    public ScheduledFuture<?> unsatisfyTimer;
+    public ScheduledFuture<?> stragglerTimer;
 
     //TODO: these two are used for scop checking, but in the current code, we
     //haven't implemented that

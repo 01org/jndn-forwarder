@@ -9,12 +9,7 @@ package com.intel.jnfd.deamon.fw;
  *
  * @author zht
  */
-public class BestRouteStrategy extends StrategyInfo {
+public interface Trigger {
 
-    private static final int typeId = 1;
-
-    @Override
-    public int getTypeId() {
-        return typeId;
-    }
+    public void trigger(Strategy strategy);
 }

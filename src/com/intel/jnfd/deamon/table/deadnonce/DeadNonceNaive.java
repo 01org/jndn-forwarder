@@ -10,24 +10,34 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
+import net.named_data.jndn.util.Blob;
 
 /**
  *
  * @author zht
  */
-public class DeadNonceNaive {
+public class DeadNonceNaive implements DeadNonce{
 
     public static long DEFAULT_LIFETIME = TimeUnit.SECONDS.toMillis(6);
 
-    private Set<Entry> nonceCache
+    private final Set<Entry> nonceCache
             = Collections.synchronizedSet(new LinkedHashSet<Entry>());
+    
+    public DeadNonceNaive() {
+        lifetime = DEFAULT_LIFETIME;
+    }
+    
+    public DeadNonceNaive(long lifetime) {
+        this.lifetime = lifetime;
+    }
 
-    public void add(Name name, int nonce) {
+    @Override
+    public void add(Name name, Blob nonce) {
         nonceCache.add(new Entry(name, nonce));
     }
 
+    @Override
     public void evictStaleEntries() {
         Iterator<Entry> iterator = nonceCache.iterator();
         long currentTimeMillis = System.currentTimeMillis();
@@ -44,18 +54,20 @@ public class DeadNonceNaive {
         }
     }
 
-    public boolean find(Name name, int nonce) {
+    @Override
+    public boolean find(Name name, Blob nonce) {
         evictStaleEntries();
         return nonceCache.contains(new Entry(name, nonce));
     }
 
+    @Override
     public int size() {
         return nonceCache.size();
     }
 
-    private class Entry implements Comparable {
+    private class Entry {
 
-        public Entry(Name name, int nonce) {
+        public Entry(Name name, Blob nonce) {
             this.name = name;
             this.nonce = nonce;
             staleTime = System.currentTimeMillis() + DEFAULT_LIFETIME;
@@ -65,7 +77,7 @@ public class DeadNonceNaive {
             return name;
         }
 
-        public int getNonce() {
+        public Blob getNonce() {
             return nonce;
         }
 
@@ -74,31 +86,24 @@ public class DeadNonceNaive {
         }
 
         private Name name;
-        private int nonce;
+        private Blob nonce;
         private long staleTime;
 
         @Override
-        public final int compareTo(Object o) {
-            int nameCompare = name.compareTo(((Entry) o).name);
-            if (nameCompare != 0) {
-                return nameCompare;
-            } else {
-                if (nonce < ((Entry) o).nonce) {
-                    return -1;
-                }
-                if (nonce > ((Entry) o).nonce) {
-                    return 1;
-                }
-                return 0;
-            }
-        }
-
-        @Override
         public final boolean equals(Object o) {
-            return this.compareTo((Entry) o) == 0;
+            return name.equals(((Entry) o).getName())
+                    && nonce.equals(((Entry) o).getNonce());
         }
 
     }
+
+    @Override
+    public long getLifetime() {
+        return lifetime;
+    }
+    
+    
+    private long lifetime;
 
     public static void main(String[] args) {
         Set<Integer> test

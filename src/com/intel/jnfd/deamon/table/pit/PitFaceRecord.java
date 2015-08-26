@@ -9,6 +9,7 @@ import com.intel.jnfd.deamon.face.Face;
 import com.intel.jnfd.deamon.table.strategy.StrategyInfoHost;
 import com.intel.jnfd.util.NfdCommon;
 import net.named_data.jndn.Interest;
+import net.named_data.jndn.util.Blob;
 
 /**
  *
@@ -18,7 +19,7 @@ public class PitFaceRecord extends StrategyInfoHost {
 
     public PitFaceRecord(Face face) {
         this.face = face;
-        lastNonce = 0;
+        lastNonce = new Blob();
         lastRenewed = 0;
         expiry = 0;
     }
@@ -27,7 +28,7 @@ public class PitFaceRecord extends StrategyInfoHost {
         return face;
     }
 
-    public long getLastNonce() {
+    public Blob getLastNonce() {
         return lastNonce;
     }
 
@@ -52,16 +53,7 @@ public class PitFaceRecord extends StrategyInfoHost {
      */
     public void update(Interest interest) {
         
-        lastNonceStr = interest.getNonce().toString();
-        
-        // TODO: this is a guess, I don't know if it is right or not
-        byte[] immutableArray = interest.getNonce().getImmutableArray();
-        int size = interest.getNonce().size();
-        lastNonce = 0;
-        for (int i = 0; i < size; i ++) {
-            lastNonce = 256 * lastNonce + immutableArray[i];
-        }
-        
+        lastNonce = interest.getNonce();  
         lastRenewed = System.currentTimeMillis();
         long lifeTime = (long) (interest.getInterestLifetimeMilliseconds());
         if (lifeTime < 0) {
@@ -70,9 +62,8 @@ public class PitFaceRecord extends StrategyInfoHost {
         expiry = lastRenewed + lifeTime;
     }
 
-    private String lastNonceStr; //This is another way of recording nonce.
     private Face face;
-    private long lastNonce;
+    private Blob lastNonce;
     private long lastRenewed;
     private long expiry;
 }
