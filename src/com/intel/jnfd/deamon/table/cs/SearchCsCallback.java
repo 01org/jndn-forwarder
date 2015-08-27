@@ -5,8 +5,6 @@
  */
 package com.intel.jnfd.deamon.table.cs;
 
-import com.intel.jndn.forwarder.api.Face;
-import com.intel.jnfd.deamon.table.pit.PitEntry;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 
@@ -15,9 +13,8 @@ import net.named_data.jndn.Interest;
  * @author zht
  */
 public interface SearchCsCallback {
-    public void onContentStoreHit(Face inFace, PitEntry pitEntry,
-            Interest interest, Data data);
-    
-    public void onContentStoreMiss(Face inFace, PitEntry pitEntry,
-            Interest interest);
+
+	public void onContentStoreHit(Interest interest, Data data);
+
+	public void onContentStoreMiss(Interest interest);
 }

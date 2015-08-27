@@ -6,7 +6,6 @@
 package com.intel.jnfd.deamon.table.cs;
 
 import com.intel.jnfd.util.NameUtil;
-import java.util.Objects;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
@@ -57,11 +56,11 @@ public class CsEntry implements Comparable {
         return data != null;
     }
 
-    public boolean canSatisfy(Interest interest) throws Exception {
+    public boolean canSatisfy(Interest interest) {
         if (!hasData()) {
             return false;
         }
-        if (NameUtil.interestMathchesData(interest, data)) {
+        if (NameUtil.interestMatchesData(interest, data)) {
             return false;
         }
         return !(interest.getMustBeFresh() && isStale());

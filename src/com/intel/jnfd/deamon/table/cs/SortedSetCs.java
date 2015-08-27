@@ -6,8 +6,6 @@
 package com.intel.jnfd.deamon.table.cs;
 
 import com.intel.jndn.forwarder.api.ContentStore;
-import com.intel.jndn.forwarder.api.Face;
-import com.intel.jnfd.deamon.table.pit.PitEntry;
 import com.intel.jnfd.util.NameUtil;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -40,8 +38,7 @@ public class SortedSetCs implements ContentStore {
 	}
 
 	@Override
-	public void find(Face inFace, PitEntry pitEntry,
-			Interest interest, SearchCsCallback searchCsCallback) throws Exception {
+	public void find(Interest interest, SearchCsCallback searchCsCallback) {
 		Name prefix = interest.getName();
 		boolean isRightMost = (interest.getChildSelector() == 1);
 		CsEntry match = null;
@@ -51,11 +48,10 @@ public class SortedSetCs implements ContentStore {
 			match = findLeftMost(interest, prefix, NameUtil.getNameSuccessor(prefix));
 		}
 		if (match == null) {
-			searchCsCallback.onContentStoreMiss(inFace, pitEntry, interest);
+			searchCsCallback.onContentStoreMiss(interest);
 			return;
 		}
-		searchCsCallback.onContentStoreHit(inFace, pitEntry, interest,
-				match.getData());
+		searchCsCallback.onContentStoreHit(interest, match.getData());
 	}
 
 	@Override
@@ -63,7 +59,7 @@ public class SortedSetCs implements ContentStore {
 		dataCache.remove(exactName);
 	}
 
-	private CsEntry findRightMost(Interest interest, Name first, Name last) throws Exception {
+	private CsEntry findRightMost(Interest interest, Name first, Name last) {
 		// Each loop visits a sub-namespace under a prefix one component longer than Interest Name.
 		// If there is a match in that sub-namespace, the leftmost match is returned;
 		// otherwise, loop continues.
@@ -90,7 +86,7 @@ public class SortedSetCs implements ContentStore {
 		return null;
 	}
 
-	private CsEntry findRightmostAmongExact(Interest interest, Name first, Name last) throws Exception {
+	private CsEntry findRightmostAmongExact(Interest interest, Name first, Name last) {
 		ConcurrentNavigableMap<Name, CsEntry> subMap
 				= dataCache.subMap(first, true, last, false);
 		if (subMap == null) {
@@ -106,8 +102,7 @@ public class SortedSetCs implements ContentStore {
 		return null;
 	}
 
-	private CsEntry findLeftMost(Interest interest, Name first, Name last)
-			throws Exception {
+	private CsEntry findLeftMost(Interest interest, Name first, Name last) {
 		ConcurrentNavigableMap<Name, CsEntry> subMap
 				= dataCache.subMap(first, true, last, false);
 		if (subMap == null) {
@@ -121,6 +116,11 @@ public class SortedSetCs implements ContentStore {
 			}
 		}
 		return null;
+	}
+	
+	@Override
+	public int size(){
+		return dataCache.size();
 	}
 
 	@Override
