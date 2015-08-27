@@ -25,7 +25,7 @@ public class FaceTable {
     /// upper bound of reserved FaceIds
     public static final int FACEID_RESERVED_MAX = 255;
 
-    public FaceTable(Forwarder forwarder) {
+    public FaceTable(ForwardingPipeline forwarder) {
         this.forwarder = forwarder;
         lastFaceId = FACEID_RESERVED_MAX;
     }
@@ -76,7 +76,7 @@ public class FaceTable {
         forwarder.getFib().removeNextHopFromAllEntries(face);
     }
 
-    private Forwarder forwarder;
+    private ForwardingPipeline forwarder;
     private int lastFaceId;
     private Map<Integer, Face> faces;
 }

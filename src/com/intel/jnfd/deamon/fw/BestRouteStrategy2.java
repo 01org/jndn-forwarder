@@ -41,7 +41,7 @@ public class BestRouteStrategy2 extends Strategy {
      * @deprecated
      */
     @Deprecated
-    public BestRouteStrategy2(Forwarder forwarder, Name name) {
+    public BestRouteStrategy2(ForwardingPipeline forwarder, Name name) {
         super(forwarder, name);
     }
 
@@ -50,7 +50,7 @@ public class BestRouteStrategy2 extends Strategy {
      *
      * @param forwarder
      */
-    public BestRouteStrategy2(Forwarder forwarder) {
+    public BestRouteStrategy2(ForwardingPipeline forwarder) {
         super(forwarder, STRATEGY_NAME);
     }
 
@@ -201,7 +201,7 @@ public class BestRouteStrategy2 extends Strategy {
             = new RetxSuppressionExponential();
 
 	@Override
-	public Face[] determineOutgoingFaces(Interest interest, Forwarder forwarder) {
+	public Face[] determineOutgoingFaces(Interest interest, ForwardingPipeline forwarder) {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 }

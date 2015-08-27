@@ -36,11 +36,11 @@ import net.named_data.jndn.util.Blob;
  *
  * @author zht
  */
-public class Forwarder implements SearchCsCallback {
+public class ForwardingPipeline implements SearchCsCallback {
 
     public static final Name LOCALHOST_NAME = new Name("ndn:/localhost");
 
-    public Forwarder() {
+    public ForwardingPipeline() {
         faceTable = new FaceTable(this);
         pit = new Pit();
         fib = new Fib();
@@ -436,7 +436,7 @@ public class Forwarder implements SearchCsCallback {
     //                = strategyChoice.findEffectiveStrategy(pitEntry.getName());
     //        trigger.trigger(effectiveStrategy);
     //    }
-	private static final Logger logger = Logger.getLogger(Forwarder.class.getName());
+	private static final Logger logger = Logger.getLogger(ForwardingPipeline.class.getName());
     private final FaceTable faceTable;
     private final Fib fib;
     private final Pit pit;

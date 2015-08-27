@@ -6,7 +6,7 @@
 package com.intel.jndn.forwarder.api;
 
 import com.intel.jnfd.deamon.fw.FaceTable;
-import com.intel.jnfd.deamon.fw.Forwarder;
+import com.intel.jnfd.deamon.fw.ForwardingPipeline;
 import com.intel.jnfd.deamon.table.fib.FibEntry;
 import com.intel.jnfd.deamon.table.measurement.MeasurementAccessor;
 import com.intel.jnfd.deamon.table.pit.PitEntry;
@@ -20,7 +20,7 @@ import net.named_data.jndn.Name;
  */
 public abstract class Strategy {
 
-	public Strategy(Forwarder forwarder, Name prefix) {
+	public Strategy(ForwardingPipeline forwarder, Name prefix) {
 		this.forwarder = forwarder;
 		this.prefix = prefix;
 	}
@@ -101,7 +101,7 @@ public abstract class Strategy {
 		return forwarder.getFaceTable();
 	}
 
-	public abstract Face[] determineOutgoingFaces(Interest interest, Forwarder forwarder);
+	public abstract Face[] determineOutgoingFaces(Interest interest, ForwardingPipeline forwarder);
 
 	@Override
 	public boolean equals(Object o) {
@@ -110,6 +110,6 @@ public abstract class Strategy {
 
 	private final Name prefix;
 	private Name name;
-	private Forwarder forwarder;
+	private ForwardingPipeline forwarder;
 	private MeasurementAccessor measurementAccessor;
 }
