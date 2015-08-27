@@ -21,8 +21,11 @@ import com.intel.jnfd.deamon.table.pit.PitInRecord;
 import com.intel.jnfd.deamon.table.pit.PitOutRecord;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoice;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
+import java.util.Vector;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -44,7 +47,7 @@ public class ForwardingPipeline implements SearchCsCallback {
         faceTable = new FaceTable(this);
         pit = new Pit();
         fib = new Fib();
-		cs = new SortedSetCs();
+        cs = new SortedSetCs();
         measurement = new Measurement();
         strategyChoice = new StrategyChoice(new BestRouteStrategy2(this));
         // install more strategies into strategyChoice here
@@ -218,12 +221,12 @@ public class ForwardingPipeline implements SearchCsCallback {
         // insert OutRecord
         pitEntry.insertOrUpdateInRecord(outFace, interest);
 
-		try {
-			// send Interest
-			outFace.sendInterest(interest);
-		} catch (IOException ex) {
-			logger.log(Level.SEVERE, null, ex);
-		}
+        try {
+            // send Interest
+            outFace.sendInterest(interest);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -326,7 +329,71 @@ public class ForwardingPipeline implements SearchCsCallback {
      * @param data
      */
     private void onIncomingData(Face inFace, Data data) {
+// TODO: in the c++ code, they set the incoming FaceId, but jndn does
+// not provide similiar function. Need to find a solution
+// data.setIncomingFaceId();
+//        data.setIncomingFaceId();
 
+        // /localhost scope control
+        boolean isViolatingLocalhost = !inFace.isLocal()
+                && LOCALHOST_NAME.match(data.getName());
+        if (isViolatingLocalhost) {
+            // (drop)
+            return;
+        }
+
+        // PIT match
+        Vector<PitEntry> pitMatches = pit.findAllDataMatches(data);
+        if (pitMatches == null || pitMatches.isEmpty()) {
+            // goto Data unsolicited pipeline
+            onDataUnsolicited(inFace, data);
+            return;
+        }
+
+        // CS insert
+        cs.insert(data, false);
+
+        Set<Face> pendingDownstreams = new HashSet<>();
+        // foreach PitEntry
+        for (PitEntry onePitEntry : pitMatches) {
+            // cancel unsatisfy & straggler timer
+            cancelUnsatisfyAndStragglerTimer(onePitEntry);
+
+            // remember pending downstreams
+            List<PitInRecord> inRecords = onePitEntry.getInRecords();
+            for (PitInRecord oneInRecord : inRecords) {
+                if (oneInRecord.getExpiry() > System.currentTimeMillis()) {
+                    pendingDownstreams.add(oneInRecord.getFace());
+                }
+            }
+
+            // invoke PIT satisfy callback
+            Strategy effectiveStrategy
+                    = strategyChoice.findEffectiveStrategy(onePitEntry.getName());
+            effectiveStrategy.beforeSatisfyInterest(onePitEntry, inFace, data);
+
+            // Dead Nonce List insert if necessary (for OutRecord of inFace)
+            insertDeadNonceList(onePitEntry, true,
+                    (long) Math.round(data.getMetaInfo().getFreshnessPeriod()),
+                    inFace);
+
+            // mark PIT satisfied
+            onePitEntry.deleteInRecords();
+            onePitEntry.deleteOutRecord(inFace);
+
+            // set PIT straggler timer
+            setStragglerTimer(onePitEntry, true,
+                    (long) Math.round(data.getMetaInfo().getFreshnessPeriod()));
+        }
+
+        // foreach pending downstream
+        for (Face one : pendingDownstreams) {
+            if (inFace.equals(one)) {
+                continue;
+            }
+            // goto outgoing Data pipeline
+            onOutgoingData(data, one);
+        }
     }
 
     /**
@@ -336,7 +403,12 @@ public class ForwardingPipeline implements SearchCsCallback {
      * @param data
      */
     private void onDataUnsolicited(Face inFace, Data data) {
-
+        // accept to cache?
+        boolean acceptToCache = inFace.isLocal();
+        if (acceptToCache) {
+            // CS insert
+            cs.insert(data, true);
+        }
     }
 
     /**
@@ -346,7 +418,27 @@ public class ForwardingPipeline implements SearchCsCallback {
      * @param outFace
      */
     private void onOutgoingData(Data data, Face outFace) {
+        if (outFace.getFaceId() == FaceTable.INVALID_FACEID) {
+            return;
+        }
 
+        // /localhost scope control
+        boolean isViolatingLocalhost = !outFace.isLocal()
+                && LOCALHOST_NAME.match(data.getName());
+        if (isViolatingLocalhost) {
+            // (drop)
+            return;
+        }
+        
+        // TODO traffic manager
+
+        try {
+            
+            // send Data
+            outFace.sendData(data);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
     }
 
     private void setUnsatisfyTimer(final PitEntry pitEntry) {
@@ -436,7 +528,7 @@ public class ForwardingPipeline implements SearchCsCallback {
     //                = strategyChoice.findEffectiveStrategy(pitEntry.getName());
     //        trigger.trigger(effectiveStrategy);
     //    }
-	private static final Logger logger = Logger.getLogger(ForwardingPipeline.class.getName());
+    private static final Logger logger = Logger.getLogger(ForwardingPipeline.class.getName());
     private final FaceTable faceTable;
     private final Fib fib;
     private final Pit pit;
