@@ -9,21 +9,27 @@ import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
 import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jnfd.deamon.face.AbstractFace;
 import com.intel.jnfd.deamon.face.FaceUri;
+import java.util.Collection;
 
 /**
  * Channels are abstractions of local interfaces; they perform the necessary
  * functionality to connect a local interface to a remote interface (i.e. a
- * {@link AbstractFace}). When a channel is opened, it accepts incoming traffic from
- * remote faces; when it is closed, it rejects incoming traffic and closes all
- * faces connected to it.
+ * {@link AbstractFace}). When a channel is opened, it accepts incoming traffic
+ * from remote faces; when it is closed, it rejects incoming traffic and closes
+ * all faces connected to it.
  *
  * @author Andrew Brown <andrew.brown@intel.com>
  */
 public interface Channel {
 
-	public FaceUri localUri();
+    public FaceUri localUri();
 
-	public void open(OnCompleted<Channel> onChannelOpened, OnFailed onFailed);
+    public void open(OnCompleted<Channel> onChannelOpened, OnFailed onFailed);
 
-	public void close(OnCompleted<Channel> onChannelClosed, OnFailed onFailed);
+    public void close(OnCompleted<Channel> onChannelClosed, OnFailed onFailed);
+
+    public Collection<? extends Face> listFaces();
+
+    public void destroyFace(FaceUri faceUri, OnCompleted<Face> onFaceDestroyed,
+            OnFailed onFaceDestructionFailed);
 }

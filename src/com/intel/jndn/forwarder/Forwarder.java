@@ -106,7 +106,7 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 
 	public void createFace(FaceUri remoteUri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed) {
 		FaceUri localUri = findApplicableChannelUri(remoteUri);
-		fm.createFace(localUri, remoteUri, onFaceCreated, onFaceCreationFailed, this, this);
+		fm.createFaceAndConnect(localUri, remoteUri, onFaceCreated, onFaceCreationFailed, this, this);
 	}
 
 	public void destroyFace(FaceUri remoteUri, OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed) {
@@ -118,7 +118,7 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 	}
 
-	public Collection<Face> listFaces() {
+	public Collection<? extends Face> listFaces() {
 		return fm.listFaces();
 	}
 

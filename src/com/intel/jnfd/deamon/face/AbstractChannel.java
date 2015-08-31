@@ -11,16 +11,16 @@ import com.intel.jndn.forwarder.api.Channel;
  *
  * @author zht
  */
-public abstract class AbstractChannel implements Channel{
+public abstract class AbstractChannel implements Channel {
 
-	@Override
+    @Override
     public FaceUri localUri() {
         return localUri;
     }
-    
+
     protected void localUri(FaceUri localUri) {
         this.localUri = localUri;
     }
-    
+
     private FaceUri localUri;
 }

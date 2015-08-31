@@ -21,17 +21,40 @@ public interface FaceManager {
 	public void registerProtocol(ProtocolFactory protocolFactory);
 
 	public Collection<ProtocolFactory> listProtocols();
+        
+        public Collection<String> listProtocolNames();
 
-	public void createChannel(FaceUri localUri, OnCompleted<Channel> onChannelCreated, OnFailed onChannelCreationFailed, OnDataReceived onDataReceived, OnInterestReceived onInterestReceived);
+	public void createChannelAndListen(FaceUri localUri, 
+                OnCompleted<Channel> onChannelCreated, 
+                OnFailed onChannelCreationFailed, 
+                OnDataReceived onDataReceived, 
+                OnInterestReceived onInterestReceived);
 
-	public Collection<Channel> listChannels();
+	public Collection<? extends Channel> listChannels();
+        
+        public Collection<? extends Channel> listChannels(String scheme);
 
-	public void destroyChannel(FaceUri localUri, OnCompleted<Channel> onChannelCreated, OnFailed onChannelCreationFailed);
+	public void destroyChannel(FaceUri localUri, 
+                OnCompleted<Channel> onChannelCreated, 
+                OnFailed onChannelCreationFailed);
+        
+        public void createFaceAndConnect(FaceUri remoteUri, 
+                OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed, 
+                OnDataReceived onDataReceived, 
+                OnInterestReceived onInterestReceived);
+        
+	public void createFaceAndConnect(FaceUri localUri, FaceUri remoteUri, 
+                OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed, 
+                OnDataReceived onDataReceived, 
+                OnInterestReceived onInterestReceived);
 
-	public void createFace(FaceUri localUri, FaceUri remoteUri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed, OnDataReceived onDataReceived, OnInterestReceived onInterestReceived);
+	public Collection<? extends Face> listFaces();
+        
+        public Collection<? extends Face> listFaces(String scheme);
 
-	public Collection<Face> listFaces();
-
-	public void destroyFace(FaceUri localUri, FaceUri remoteUri, OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed);
+	public void destroyFace(Face face, OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed);
+        
+        public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri, 
+                OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed);
 
 }
