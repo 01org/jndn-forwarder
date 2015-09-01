@@ -16,6 +16,7 @@ import net.named_data.jndn.Name;
 /**
  *
  * @author zht
+ * @param <V>
  */
 public class HashMapRepo<V> implements NameTable<V> {
 
@@ -23,12 +24,12 @@ public class HashMapRepo<V> implements NameTable<V> {
         repo = new ConcurrentHashMap<>();
     }
 
-	@Override
+    @Override
     public int size() {
         return repo.size();
     }
 
-	@Override
+    @Override
     public V findLongestPrefixMatch(Name prefix) {
         V result = null;
         for (int i = prefix.size(); i >= 0; i--) {
@@ -40,7 +41,7 @@ public class HashMapRepo<V> implements NameTable<V> {
         }
         return null;
     }
-    
+
     public V findLongestPrefixMatch(Name prefix, EntryFilter filter) {
         V result = null;
         for (int i = prefix.size(); i >= 0; i--) {
@@ -53,34 +54,35 @@ public class HashMapRepo<V> implements NameTable<V> {
         return null;
     }
 
-	@Override
+    @Override
     public V findExactMatch(Name prefix) {
         return repo.get(prefix);
     }
-    
-	@Override
+
+    @Override
     public void insert(Name prefix, V value) {
         repo.put(prefix, value);
     }
 
-	@Override
-    public void erase(Name prefix) {
-        repo.remove(prefix);
+    @Override
+    public V erase(Name prefix) {
+        return repo.remove(prefix);
     }
 
-	@Override
+    @Override
     public boolean hasKey(Name key) {
         return repo.containsKey(key);
     }
-    
-	@Override
+
+    @Override
     public Set<Entry<Name, V>> EntrySet() {
         return repo.entrySet();
     }
-	
-	public Collection<V> values() {
-		return repo.values();
-	}
 
-    private Map<Name, V> repo;
+    @Override
+    public Collection<V> values() {
+        return repo.values();
+    }
+
+    private final Map<Name, V> repo;
 }

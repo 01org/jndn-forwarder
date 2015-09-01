@@ -22,7 +22,7 @@ public interface NameTable<V> {
 
 	public void insert(Name prefix, V value);
 
-	public void erase(Name prefix);
+	public V erase(Name prefix);
 
 	public V findExactMatch(Name prefix);
 

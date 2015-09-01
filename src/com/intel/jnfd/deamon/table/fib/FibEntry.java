@@ -5,10 +5,12 @@
  */
 package com.intel.jnfd.deamon.table.fib;
 
+import com.intel.jndn.forwarder.api.Face;
 import com.intel.jnfd.deamon.face.AbstractFace;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.List;
 import net.named_data.jndn.Name;
 
 /**
@@ -25,7 +27,7 @@ public class FibEntry {
         return prefix;
     }
     
-    public Vector<FibNextHop> getNextHopList() {
+    public List<FibNextHop> getNextHopList() {
         return nextHopList;
     }
     
@@ -33,11 +35,11 @@ public class FibEntry {
         return nextHopList.isEmpty();
     }
     
-    public boolean hasNextHop(AbstractFace face) {
+    public boolean hasNextHop(Face face) {
         return findNextHop(face) != null;
     }
     
-    public void addNextHop(AbstractFace face, long cost) {
+    public void addNextHop(Face face, long cost) {
         FibNextHop nextHop = findNextHop(face);
         if (nextHop == null) {
             nextHopList.add(new FibNextHop(face, cost));
@@ -47,7 +49,7 @@ public class FibEntry {
         sortNextHops();
     }
     
-    public void removeNextHop(AbstractFace face) {
+    public void removeNextHop(Face face) {
         FibNextHop nextHop = findNextHop(face);
         if (nextHop != null) {
             nextHopList.remove(nextHop);
@@ -58,17 +60,15 @@ public class FibEntry {
         Collections.sort(nextHopList);
     }
     
-    private FibNextHop findNextHop(AbstractFace face) {
-        Iterator<FibNextHop> iterator = nextHopList.iterator();
-        while (iterator.hasNext()) {
-            FibNextHop next = iterator.next();
-            if (next.getFace() == face || next.getFace().equals(face)) {
-                return next;
+    public FibNextHop findNextHop(Face face) {
+        for(FibNextHop one : nextHopList) {
+            if (one.getFace() == face || one.getFace().equals(face)) {
+                return one;
             }
         }
         return null;
     }
     
     private Name prefix;
-    private Vector<FibNextHop> nextHopList = new Vector<>();
+    private List<FibNextHop> nextHopList = new ArrayList<>();
 }

@@ -37,13 +37,15 @@ import net.named_data.jndn.util.Common;
  */
 public class TcpFace extends AbstractFace {
 
-    public TcpFace(FaceUri localUri, FaceUri remoteUri, AsynchronousSocketChannel asynchronousSocketChannel, boolean isLocal, boolean isMultiAccess, OnDataReceived onDataReceived, OnInterestReceived onInterestReceived) {
+    public TcpFace(FaceUri localUri, FaceUri remoteUri, AsynchronousSocketChannel asynchronousSocketChannel, 
+            boolean isLocal, boolean isMultiAccess, OnDataReceived onDataReceived, OnInterestReceived onInterestReceived) {
         super(localUri, remoteUri, isLocal, isMultiAccess);
         this.asynchronousSocketChannel = asynchronousSocketChannel;
         ReceiveHandler receiveHandler = new ReceiveHandler();
         this.asynchronousSocketChannel.read(inputBuffer, null, receiveHandler);
         this.onInterestReceived = onInterestReceived;
         this.onDataReceived = onDataReceived;
+        this.elementReader = new ElementReader(new Deserializer(onDataReceived, onInterestReceived));
     }
 
     @Override
@@ -122,6 +124,7 @@ public class TcpFace extends AbstractFace {
                 asynchronousSocketChannel.read(inputBuffer, attachment, this);
                 try {
                     elementReader.onReceivedData(inputBuffer);
+                    
                 } catch (EncodingException ex) {
                     logger.log(Level.WARNING, "Failed to decode bytes on face.", ex);
                 }

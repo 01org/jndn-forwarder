@@ -11,7 +11,7 @@ import com.intel.jnfd.deamon.table.fib.FibEntry;
 import com.intel.jnfd.deamon.table.fib.FibNextHop;
 import com.intel.jnfd.deamon.table.pit.PitEntry;
 import com.intel.jnfd.deamon.table.pit.PitOutRecord;
-import java.util.Vector;
+import java.util.List;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
@@ -57,7 +57,7 @@ public class BestRouteStrategy2 extends Strategy {
     @Override
     public void afterReceiveInterest(Face inFace, Interest interest,
             FibEntry fibEntry, PitEntry pitEntry) {
-        Vector<FibNextHop> nextHopList = fibEntry.getNextHopList();
+        List<FibNextHop> nextHopList = fibEntry.getNextHopList();
         FibNextHop nextHop = null;
 
         RetxSuppression.Result suppression
@@ -180,7 +180,7 @@ public class BestRouteStrategy2 extends Strategy {
      * @return
      */
     private static FibNextHop findEligibleNextHopWithEarliestOutRecord(
-            PitEntry pitEntry, Vector<FibNextHop> nexthops,
+            PitEntry pitEntry, List<FibNextHop> nexthops,
             int currentDownstreamId) {
         FibNextHop result = null;
         long earliestRenewed = Long.MAX_VALUE;

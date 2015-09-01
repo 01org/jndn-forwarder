@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import net.named_data.jndn.Name;
 import net.named_data.jndn.util.Blob;
@@ -24,12 +26,23 @@ public class DeadNonceNaive implements DeadNonce{
     private final Set<Entry> nonceCache
             = Collections.synchronizedSet(new LinkedHashSet<Entry>());
     
-    public DeadNonceNaive() {
+    public DeadNonceNaive(ScheduledExecutorService scheduler) {
         lifetime = DEFAULT_LIFETIME;
+        this.scheduler = scheduler;
     }
     
-    public DeadNonceNaive(long lifetime) {
+    public DeadNonceNaive(ScheduledExecutorService scheduler, long lifetime) {
         this.lifetime = lifetime;
+        this.scheduler = scheduler;
+        evictTimer = this.scheduler.scheduleAtFixedRate(new Runnable() {
+
+            @Override
+            public void run() {
+                evictStaleEntries();
+            }
+            
+        }, 
+                1000, this.lifetime, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -56,7 +69,6 @@ public class DeadNonceNaive implements DeadNonce{
 
     @Override
     public boolean find(Name name, Blob nonce) {
-        evictStaleEntries();
         return nonceCache.contains(new Entry(name, nonce));
     }
 
@@ -104,6 +116,8 @@ public class DeadNonceNaive implements DeadNonce{
     
     
     private long lifetime;
+    private ScheduledExecutorService scheduler;
+    public ScheduledFuture<?> evictTimer;
 
     public static void main(String[] args) {
         Set<Integer> test

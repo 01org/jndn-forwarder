@@ -13,6 +13,8 @@ import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
 import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
+import com.intel.jnfd.deamon.face.tcp.Tcp4Factory;
+import com.intel.jnfd.deamon.face.tcp.Tcp6Factory;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,14 +26,33 @@ import java.util.concurrent.Executors;
  *
  * @author zht
  */
-public class DefaultFaceManager implements FaceManager {
+public final class DefaultFaceManager implements FaceManager {
 
-    public DefaultFaceManager(ExecutorService pool) {
+    public DefaultFaceManager(ExecutorService pool,
+            OnCompleted<Channel> onChannelCreated,
+            OnFailed onChannelCreationFailed,
+            OnDataReceived onDataReceived,
+            OnInterestReceived onInterestReceived) {
         this.pool = pool;
+        registerProtocol(new Tcp4Factory(this.pool, onChannelCreated,
+                onChannelCreationFailed,
+                onDataReceived,
+                onInterestReceived));
+        registerProtocol(new Tcp6Factory(this.pool, onChannelCreated,
+                onChannelCreationFailed,
+                onDataReceived,
+                onInterestReceived));
     }
 
-    public DefaultFaceManager() {
-        this(Executors.newCachedThreadPool());
+    public DefaultFaceManager(OnCompleted<Channel> onChannelCreated,
+            OnFailed onChannelCreationFailed,
+            OnDataReceived onDataReceived,
+            OnInterestReceived onInterestReceived) {
+        this(Executors.newCachedThreadPool(),
+                onChannelCreated,
+                onChannelCreationFailed,
+                onDataReceived,
+                onInterestReceived);
     }
 
     @Override
@@ -146,7 +167,7 @@ public class DefaultFaceManager implements FaceManager {
     }
 
     @Override
-    public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri, 
+    public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri,
             OnCompleted<Face> onFaceDestroyed,
             OnFailed onFaceDestructionFailed) {
         ProtocolFactory protocol = protocols.get(localFaceUri.getScheme());
@@ -154,7 +175,7 @@ public class DefaultFaceManager implements FaceManager {
             onFaceDestructionFailed.onFailed(new Exception("No such face found "
                     + localFaceUri.getScheme()));
         }
-        protocol.destroyFace(localFaceUri, remoteFaceUri, 
+        protocol.destroyFace(localFaceUri, remoteFaceUri,
                 onFaceDestroyed, onFaceDestructionFailed);
     }
 
@@ -175,6 +196,6 @@ public class DefaultFaceManager implements FaceManager {
         return protocols.get(scheme).listFaces();
     }
 
-    private Map<String, ProtocolFactory> protocols = new HashMap<>();
-    private ExecutorService pool;
+    private final Map<String, ProtocolFactory> protocols = new HashMap<>();
+    private final ExecutorService pool;
 }

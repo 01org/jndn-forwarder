@@ -114,6 +114,7 @@ public class StrategyChoice implements StrategyChoiceTable {
 	 strategyChoiceEntry, oldStrategy, parentStrategy);
 	 strategyChoice.erase(prefix);
 	 }*/
+        
 	@Override
 	public void erase(Name prefix) {
 		// The root strategy should not be erased.

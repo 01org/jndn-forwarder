@@ -5,9 +5,11 @@
  */
 package com.intel.jnfd.deamon.table.pit;
 
+import com.intel.jndn.forwarder.api.PendingInterestTable;
 import com.intel.jnfd.deamon.table.HashMapRepo;
 import com.intel.jnfd.deamon.table.Pair;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
 
@@ -15,8 +17,9 @@ import net.named_data.jndn.Interest;
  *
  * @author zht
  */
-public class Pit {
+public class Pit implements PendingInterestTable {
 
+    @Override
     public int size() {
         return pit.size();
     }
@@ -28,10 +31,11 @@ public class Pit {
      * @param interest
      * @return the entry, and true for new entry, false for existing entry
      */
+    @Override
     public Pair<PitEntry> insert(Interest interest) {
-        Vector<PitEntry> pitEntries = pit.findExactMatch(interest.getName());
+        List<PitEntry> pitEntries = pit.findExactMatch(interest.getName());
         if (pitEntries == null) {
-            pitEntries = new Vector<>();
+            pitEntries = new ArrayList<>();
             PitEntry pitEntry = new PitEntry();
             pitEntries.add(pitEntry);
             pit.insert(interest.getName(), pitEntries);
@@ -48,17 +52,18 @@ public class Pit {
         return new Pair(pitEntry, true);
     }
 
-    public Vector<PitEntry> findAllDataMatches(Data data) {
+    @Override
+    public List<PitEntry> findAllMatches(Data data) {
         return pit.findLongestPrefixMatch(data.getName());
     }
 
     public void erase(PitEntry pitEntry) {
-        Vector<PitEntry> pitEntries = pit.findExactMatch(pitEntry.getName());
+        List<PitEntry> pitEntries = pit.findExactMatch(pitEntry.getName());
         if (pitEntries == null) {
             return;
         }
         pitEntries.remove(pitEntry);
     }
 
-    private HashMapRepo<Vector<PitEntry>> pit = new HashMapRepo<>();
+    private HashMapRepo<List<PitEntry>> pit = new HashMapRepo<>();
 }
