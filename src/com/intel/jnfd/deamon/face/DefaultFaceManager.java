@@ -90,14 +90,12 @@ public final class DefaultFaceManager implements FaceManager {
                     + "for " + localUri.getScheme()));
         }
         //Create the channel instance.
-        Channel channel = protocol.createChannel(localUri, new OnCompleted<Channel>() {
+        protocol.createChannelAndListen(localUri, new OnCompleted<Channel>() {
             @Override
             public void onCompleted(Channel result) {
                 // TODO 
             }
         }, onChannelCreationFailed, onDataReceived, onInterestReceived);
-        // start to listen on the channel
-        channel.open(onChannelCreated, onChannelCreationFailed);
     }
 
     @Override

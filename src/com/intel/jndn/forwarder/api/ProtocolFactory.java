@@ -22,7 +22,7 @@ public interface ProtocolFactory {
 
 	public FaceUri defaultLocalUri();
 
-	public Channel createChannel(FaceUri faceUri, 
+	public Channel createChannelAndListen(FaceUri faceUri, 
                 OnCompleted<Channel> onChannelCreated, 
                 OnFailed onChannelCreationFailed, 
                 OnDataReceived onDataReceived, 

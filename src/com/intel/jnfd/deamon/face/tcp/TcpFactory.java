@@ -40,7 +40,7 @@ public abstract class TcpFactory implements ProtocolFactory {
     }
 
     @Override
-    public Channel createChannel(FaceUri faceUri,
+    public Channel createChannelAndListen(FaceUri faceUri,
             OnCompleted<Channel> onChannelCreated,
             OnFailed onChannelCreationFailed,
             OnDataReceived onDataReceived,
@@ -55,7 +55,7 @@ public abstract class TcpFactory implements ProtocolFactory {
                         asynchronousChannelGroup, onInterestReceived,
                         onDataReceived);
                 channelMap.put(faceUri, channel);
-                onChannelCreated.onCompleted(channel);
+                channel.open(onChannelCreated, onChannelCreationFailed);
             } catch (IOException ex) {
                 onChannelCreationFailed.onFailed(ex);
             }

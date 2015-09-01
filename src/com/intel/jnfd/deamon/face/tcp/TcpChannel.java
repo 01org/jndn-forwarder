@@ -25,7 +25,6 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -92,6 +91,7 @@ public class TcpChannel extends AbstractChannel {
     public void open(OnCompleted<Channel> onChannelCreated,
             OnFailed onFailure) {
         try {
+            System.out.println(mAddr.toString());
             asynchronousServerSocket.bind(mAddr);
             asynchronousServerSocket.accept(null, new AcceptHandler());
         } catch (IOException ex) {

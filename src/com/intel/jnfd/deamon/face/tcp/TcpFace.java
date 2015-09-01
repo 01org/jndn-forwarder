@@ -122,6 +122,7 @@ public class TcpFace extends AbstractFace {
         public void completed(Integer result, Void attachment) {
             if (result != -1) {
                 asynchronousSocketChannel.read(inputBuffer, attachment, this);
+                System.out.println("receive something");
                 try {
                     elementReader.onReceivedData(inputBuffer);
                     

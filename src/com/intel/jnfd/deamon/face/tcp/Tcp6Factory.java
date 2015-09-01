@@ -28,7 +28,7 @@ public class Tcp6Factory extends TcpFactory {
             OnDataReceived onDataReceived,
             OnInterestReceived onInterestReceived) {
         super(pool);
-        createChannel(defaultLocalUri(), onChannelCreated,
+        createChannelAndListen(defaultLocalUri(), onChannelCreated,
                 onChannelCreationFailed,
                 onDataReceived,
                 onInterestReceived);

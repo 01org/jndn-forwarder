@@ -27,8 +27,9 @@ public class Tcp4Factory extends TcpFactory {
             OnDataReceived onDataReceived,
             OnInterestReceived onInterestReceived) {
         super(pool);
-        createChannel(defaultLocalUri(), onChannelCreated, 
+        createChannelAndListen(defaultLocalUri(), onChannelCreated, 
                 onChannelCreationFailed, onDataReceived, onInterestReceived);
+//        channel.open(onChannelCreated, onChannelCreationFailed);
     }
 
     @Override
