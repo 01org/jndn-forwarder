@@ -9,6 +9,7 @@ import com.intel.jndn.forwarder.api.PendingInterestTable;
 import com.intel.jnfd.deamon.table.HashMapRepo;
 import com.intel.jnfd.deamon.table.Pair;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
@@ -36,7 +37,7 @@ public class Pit implements PendingInterestTable {
         List<PitEntry> pitEntries = pit.findExactMatch(interest.getName());
         if (pitEntries == null) {
             pitEntries = new ArrayList<>();
-            PitEntry pitEntry = new PitEntry();
+            PitEntry pitEntry = new PitEntry(interest);
             pitEntries.add(pitEntry);
             pit.insert(interest.getName(), pitEntries);
             return new Pair(pitEntry, true);
@@ -47,16 +48,18 @@ public class Pit implements PendingInterestTable {
                 return new Pair(one, false);
             }
         }
-        PitEntry pitEntry = new PitEntry();
+        PitEntry pitEntry = new PitEntry(interest);
         pitEntries.add(pitEntry);
         return new Pair(pitEntry, true);
     }
 
     @Override
     public List<PitEntry> findAllMatches(Data data) {
-        return pit.findLongestPrefixMatch(data.getName());
+		List<PitEntry> matches = pit.findLongestPrefixMatch(data.getName());
+		return matches == null ? Collections.EMPTY_LIST : matches;
     }
 
+	@Override
     public void erase(PitEntry pitEntry) {
         List<PitEntry> pitEntries = pit.findExactMatch(pitEntry.getName());
         if (pitEntries == null) {

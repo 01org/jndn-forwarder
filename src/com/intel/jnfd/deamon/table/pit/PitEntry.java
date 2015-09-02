@@ -36,10 +36,6 @@ public class PitEntry extends StrategyInfoHost {
         this.interest = interest;
     }
 
-    PitEntry() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
     public Interest getInterest() {
         return interest;
     }

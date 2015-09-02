@@ -31,24 +31,22 @@ public class HashMapRepo<V> implements NameTable<V> {
 
     @Override
     public V findLongestPrefixMatch(Name prefix) {
-        V result = null;
         for (int i = prefix.size(); i >= 0; i--) {
             Name p = prefix.getPrefix(i);
             V r = findExactMatch(p);
             if (r != null) {
-                return result;
+                return r;
             }
         }
         return null;
     }
 
     public V findLongestPrefixMatch(Name prefix, EntryFilter filter) {
-        V result = null;
         for (int i = prefix.size(); i >= 0; i--) {
             Name p = prefix.getPrefix(i);
             V r = findExactMatch(p);
             if (r != null && filter.filt(r)) {
-                return result;
+                return r;
             }
         }
         return null;
