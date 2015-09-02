@@ -8,6 +8,8 @@ package com.intel.jnfd.deamon.table.cs;
 import com.intel.jndn.forwarder.api.ContentStore;
 import com.intel.jnfd.util.NameUtil;
 import java.util.Iterator;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import net.named_data.jndn.Data;
@@ -32,9 +34,31 @@ public class SortedSetCs implements ContentStore {
 		// TODO: recognize CachingPolicy
 		// this part should be added after the jNDN library add
 		// "LocalControlHeader" attribute
-		CsEntry csEntry = new CsEntry(data, isUnsolicited);
-		dataCache.put(data.getName(), csEntry);
+
+		if (limit() == 0) {
+			return false;
+		}
+
+		if (dataCache.size() >= limit()) {
+			evictOldestData();
+		}
+
+		CsEntry newEntry = new CsEntry(data, isUnsolicited);
+		fifoQueue.add(newEntry);
+		dataCache.put(data.getName(), newEntry);
+
 		return true;
+	}
+
+	private void evictOldestData() {
+		// evict oldest first; note: that queue may contain records already erased
+		boolean evicted = false;
+		while(!evicted){
+			CsEntry oldEntry = fifoQueue.poll();
+			if (oldEntry != null) {
+				evicted = dataCache.remove(oldEntry.getName()) != null;
+			}
+		}
 	}
 
 	@Override
@@ -55,8 +79,9 @@ public class SortedSetCs implements ContentStore {
 	}
 
 	@Override
-	public void erase(Name exactName) {
-		dataCache.remove(exactName);
+	public Data erase(Name exactName) {
+		CsEntry removed = dataCache.remove(exactName);
+		return removed == null ? null : removed.getData();
 	}
 
 	private CsEntry findRightMost(Interest interest, Name first, Name last) {
@@ -117,9 +142,9 @@ public class SortedSetCs implements ContentStore {
 		}
 		return null;
 	}
-	
+
 	@Override
-	public int size(){
+	public int size() {
 		return dataCache.size();
 	}
 
@@ -134,5 +159,6 @@ public class SortedSetCs implements ContentStore {
 	}
 
 	private final ConcurrentSkipListMap<Name, CsEntry> dataCache = new ConcurrentSkipListMap<>();
+	private final Queue<CsEntry> fifoQueue = new ConcurrentLinkedQueue();
 	private int maxNumberOfDataPackets = Integer.MAX_VALUE;
 }
