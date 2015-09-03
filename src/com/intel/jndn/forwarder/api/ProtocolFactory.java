@@ -5,10 +5,6 @@
  */
 package com.intel.jndn.forwarder.api;
 
-import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
-import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
-import com.intel.jndn.forwarder.api.callbacks.OnFailed;
-import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.FaceUri;
 import java.util.Collection;
 
@@ -18,41 +14,41 @@ import java.util.Collection;
  */
 public interface ProtocolFactory {
 
-	public String scheme();
+    /**
+     * a factory may correspond to several different schemes
+     *
+     * @return
+     */
+    public String[] scheme();
 
-	public FaceUri defaultLocalUri();
+    /**
+     * For each schemes, it has a localUri.
+     *
+     * @return
+     */
+    public FaceUri[] defaultLocalUri();
 
-	public Channel createChannelAndListen(FaceUri faceUri, 
-                OnCompleted<Channel> onChannelCreated, 
-                OnFailed onChannelCreationFailed, 
-                OnDataReceived onDataReceived, 
-                OnInterestReceived onInterestReceived);
-        
-        public Collection<? extends Channel> listChannels();
+    public Channel createChannel(FaceUri faceUri);
 
-	public void destroyChannel(FaceUri faceUri, 
-                OnCompleted<Channel> onChannelDestroyed, 
-                OnFailed onChannelDestructionFailure);
+    public Collection<? extends Channel> listChannels();
 
-	public void createFace(FaceUri remoteFaceUri, 
-                OnCompleted<Face> onFaceCreated, 
-                OnFailed onFaceCreationFailed, 
-                OnDataReceived onDataReceived, 
-                OnInterestReceived onInterestReceived);
-        
-        public Collection<? extends Face> listFaces();
+    public void destroyChannel(FaceUri faceUri);
 
-        public void createFace(FaceUri localFaceUri, 
-                FaceUri remoteFaceUri,
-                OnCompleted<Face> onFaceCreated, 
-                OnFailed onFaceCreationFailed, 
-                OnDataReceived onDataReceived, 
-                OnInterestReceived onInterestReceived);
-        
-	public void destroyFace(Face face, OnCompleted<Face> onFaceDestroyed, 
-                OnFailed onFaceDestructionFailed);
-        
-        public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri,
-            OnCompleted<Face> onFaceDestroyed,
-            OnFailed onFaceDestructionFailed);
+    public void createFace(FaceUri remoteFaceUri);
+
+    public Collection<? extends Face> listFaces();
+
+    /**
+     * find an existing channel to connect to remote faceuri or create a new one
+     *
+     * @param localFaceUri
+     * @param remoteFaceUri
+     * @param newChannel if no existing channel found, create a new one or not.
+     */
+    public void createFace(FaceUri localFaceUri, FaceUri remoteFaceUri, 
+            boolean newChannel);
+
+    public void destroyFace(Face face);
+
+    public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri);
 }

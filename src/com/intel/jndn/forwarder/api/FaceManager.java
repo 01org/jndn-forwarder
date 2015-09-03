@@ -24,37 +24,24 @@ public interface FaceManager {
         
         public Collection<String> listProtocolNames();
 
-	public void createChannelAndListen(FaceUri localUri, 
-                OnCompleted<Channel> onChannelCreated, 
-                OnFailed onChannelCreationFailed, 
-                OnDataReceived onDataReceived, 
-                OnInterestReceived onInterestReceived);
+	public void createChannelAndListen(FaceUri localUri);
 
 	public Collection<? extends Channel> listChannels();
         
         public Collection<? extends Channel> listChannels(String scheme);
 
-	public void destroyChannel(FaceUri localUri, 
-                OnCompleted<Channel> onChannelCreated, 
-                OnFailed onChannelCreationFailed);
+	public void destroyChannel(FaceUri localUri);
         
-        public void createFaceAndConnect(FaceUri remoteUri, 
-                OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed, 
-                OnDataReceived onDataReceived, 
-                OnInterestReceived onInterestReceived);
+        public void createFaceAndConnect(FaceUri remoteUri);
         
-	public void createFaceAndConnect(FaceUri localUri, FaceUri remoteUri, 
-                OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed, 
-                OnDataReceived onDataReceived, 
-                OnInterestReceived onInterestReceived);
+	public void createFaceAndConnect(FaceUri localUri, FaceUri remoteUri);
 
 	public Collection<? extends Face> listFaces();
         
         public Collection<? extends Face> listFaces(String scheme);
 
-	public void destroyFace(Face face, OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed);
+	public void destroyFace(Face face);
         
-        public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri, 
-                OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed);
+        public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri);
 
 }

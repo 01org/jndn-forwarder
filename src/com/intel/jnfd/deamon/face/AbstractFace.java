@@ -30,10 +30,13 @@ public abstract class AbstractFace implements Face {
         this.isMultiAccess = isMultiAccess;
     }
     
+    @Override
     public abstract void sendInterest(Interest interest);
 
+    @Override
     public abstract void sendData(Data data);
     
+    @Override
     public FaceUri getLocalUri() {
         return localUri;
     }
@@ -42,6 +45,7 @@ public abstract class AbstractFace implements Face {
         this.localUri = localUri;
     }
 
+    @Override
     public FaceUri getRemoteUri() {
         return remoteUri;
     }
@@ -50,6 +54,7 @@ public abstract class AbstractFace implements Face {
         this.remoteUri = remoteUri;
     }
 
+    @Override
     public boolean isLocal() {
         return isLocal;
     }
@@ -58,6 +63,7 @@ public abstract class AbstractFace implements Face {
         this.isLocal = isLocal;
     }
 
+    @Override
     public boolean isMultiAccess() {
         return isMultiAccess;
     }
@@ -66,10 +72,12 @@ public abstract class AbstractFace implements Face {
         this.isMultiAccess = isMultiAccess;
     }
 
+    @Override
     public int getFaceId() {
         return faceId;
     }
 
+    @Override
     public void setFaceId(int faceId) {
         this.faceId = faceId;
     }
@@ -80,12 +88,10 @@ public abstract class AbstractFace implements Face {
             return false;
         }
         AbstractFace other = (AbstractFace) o;
-        if(localUri.equals(other.getLocalUri())
+        return localUri.equals(other.getLocalUri())
                 && remoteUri.equals(other.getRemoteUri())
                 && other.isLocal() == isLocal
-                && other.isMultiAccess() == isMultiAccess)
-            return true;
-        return false;
+                && other.isMultiAccess() == isMultiAccess;
     }
 
     @Override

@@ -5,10 +5,7 @@
  */
 package com.intel.jnfd.deamon.face.tcp;
 
-import com.intel.jndn.forwarder.api.Face;
-import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
 import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
-import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.AbstractFace;
 import com.intel.jnfd.deamon.face.FaceUri;
@@ -37,12 +34,17 @@ import net.named_data.jndn.util.Common;
  */
 public class TcpFace extends AbstractFace {
 
-    public TcpFace(FaceUri localUri, FaceUri remoteUri, AsynchronousSocketChannel asynchronousSocketChannel, 
-            boolean isLocal, boolean isMultiAccess, OnDataReceived onDataReceived, OnInterestReceived onInterestReceived) {
+    public TcpFace(FaceUri localUri, FaceUri remoteUri,
+            AsynchronousSocketChannel asynchronousSocketChannel,
+            boolean isLocal, boolean isMultiAccess,
+            OnDataReceived onDataReceived,
+            OnInterestReceived onInterestReceived) {
         super(localUri, remoteUri, isLocal, isMultiAccess);
         this.asynchronousSocketChannel = asynchronousSocketChannel;
         ReceiveHandler receiveHandler = new ReceiveHandler();
         this.asynchronousSocketChannel.read(inputBuffer, null, receiveHandler);
+
+        // callbacks
         this.onInterestReceived = onInterestReceived;
         this.onDataReceived = onDataReceived;
         this.elementReader = new ElementReader(new Deserializer(onDataReceived, onInterestReceived));
@@ -81,19 +83,11 @@ public class TcpFace extends AbstractFace {
     }
 
     @Override
-    public void close(OnCompleted<Face> onFaceDestroyed,
-            OnFailed onFaceDestructionFailed) {
+    public void close() throws IOException {
         if (!asynchronousSocketChannel.isOpen()) {
             return;
         }
-
-        try {
-            asynchronousSocketChannel.close();
-            onFaceDestroyed.onCompleted(this);
-        } catch (IOException ex) {
-            onFaceDestructionFailed.onFailed(ex);
-        }
-
+        asynchronousSocketChannel.close();
         sendQueue.clear();
     }
 
@@ -103,14 +97,6 @@ public class TcpFace extends AbstractFace {
     protected void sendFromQueue() {
         asynchronousSocketChannel.write(sendQueue.poll().buf(), null, new SendHandler());
     }
-
-    private static final Logger logger = Logger.getLogger(TcpFace.class.getName());
-    protected AsynchronousSocketChannel asynchronousSocketChannel;
-    private ByteBuffer inputBuffer = ByteBuffer.allocate(Common.MAX_NDN_PACKET_SIZE);
-    private Queue<Blob> sendQueue = new ConcurrentLinkedQueue<>();
-    private ElementReader elementReader = new ElementReader(new Deserializer(null, null));
-    private final OnInterestReceived onInterestReceived;
-    private final OnDataReceived onDataReceived;
 
     /**
      * Receive data and split it into elements (e.g. Data, Interest) using the
@@ -125,7 +111,7 @@ public class TcpFace extends AbstractFace {
                 System.out.println("receive something");
                 try {
                     elementReader.onReceivedData(inputBuffer);
-                    
+
                 } catch (EncodingException ex) {
                     logger.log(Level.WARNING, "Failed to decode bytes on face.", ex);
                 }
@@ -188,4 +174,12 @@ public class TcpFace extends AbstractFace {
         }
 
     }
+
+    private static final Logger logger = Logger.getLogger(TcpFace.class.getName());
+    protected AsynchronousSocketChannel asynchronousSocketChannel;
+    private final ByteBuffer inputBuffer = ByteBuffer.allocate(Common.MAX_NDN_PACKET_SIZE);
+    private final Queue<Blob> sendQueue = new ConcurrentLinkedQueue<>();
+    private ElementReader elementReader = new ElementReader(new Deserializer(null, null));
+    private final OnInterestReceived onInterestReceived;
+    private final OnDataReceived onDataReceived;
 }

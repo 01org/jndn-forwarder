@@ -5,11 +5,11 @@
  */
 package com.intel.jndn.forwarder.api;
 
-import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
-import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jnfd.deamon.face.AbstractFace;
 import com.intel.jnfd.deamon.face.FaceUri;
+import java.io.IOException;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  * Channels are abstractions of local interfaces; they perform the necessary
@@ -22,14 +22,18 @@ import java.util.Collection;
  */
 public interface Channel {
 
-    public FaceUri localUri();
+    /**
+     * A channel may correspond to more than one local FaceUri, for example, a tcp
+     * channel corresponds to a IPv4 and a IPv6 local FaceUri.
+     * @return 
+     */
+    public Set<FaceUri> localUri();
 
-    public void open(OnCompleted<Channel> onChannelOpened, OnFailed onFailed);
+    public void open() throws IOException;
 
-    public void close(OnCompleted<Channel> onChannelClosed, OnFailed onFailed);
+    public void close() throws IOException;
 
     public Collection<? extends Face> listFaces();
 
-    public void destroyFace(FaceUri faceUri, OnCompleted<Face> onFaceDestroyed,
-            OnFailed onFaceDestructionFailed);
+    public void destroyFace(FaceUri faceUri);
 }

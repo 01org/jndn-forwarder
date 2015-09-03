@@ -5,7 +5,6 @@
  */
 package com.intel.jndn.forwarder;
 
-import com.intel.jndn.forwarder.api.Channel;
 import com.intel.jndn.forwarder.api.FaceInformationBase;
 import com.intel.jndn.forwarder.api.PendingInterestTable;
 import com.intel.jndn.forwarder.api.ContentStore;
@@ -20,7 +19,6 @@ import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.DefaultFaceManager;
 import com.intel.jnfd.deamon.fw.ForwardingPipeline;
-import com.intel.jnfd.deamon.table.Pair;
 import com.intel.jnfd.deamon.table.fib.FibEntry;
 import com.intel.jnfd.deamon.table.pit.PitEntry;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoiceEntry;
@@ -28,7 +26,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.named_data.jndn.Data;
 import net.named_data.jndn.Interest;
@@ -43,63 +40,14 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
     private final ScheduledExecutorService pool;
     private final ForwardingPipeline pipeline;
     private final FaceManager faceManager;
-    private final Logger logger = Logger.getLogger(Forwarder.class.getName());
-
-    private OnCompleted<Channel> onChannelCreated;
-    private OnFailed onChannelCreationFailed;
-    private OnDataReceived onDataReceived;
-    private OnInterestReceived onInterestReceived;
-
-    private void initialize() {
-        onChannelCreated = new OnCompleted<Channel>() {
-
-            @Override
-            public void onCompleted(Channel result) {
-
-            }
-
-        };
-
-        onChannelCreationFailed = new OnFailed() {
-
-            @Override
-            public void onFailed(Throwable error) {
-                logger.log(Level.SEVERE, null, error);
-            }
-
-        };
-
-        onDataReceived = new OnDataReceived() {
-
-            @Override
-            public void onData(Data data, Face incomingFace) {
-                pipeline.onData(incomingFace, data);
-            }
-
-        };
-
-        onInterestReceived = new OnInterestReceived() {
-
-            @Override
-            public void onInterest(Interest interest, Face face) {
-                try {
-                    pipeline.onInterest(face, interest);
-                } catch (Exception ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
-            }
-
-        };
-    }
+    private static final Logger logger = Logger.getLogger(Forwarder.class.getName());
 
     public Forwarder() {
 
         pool = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
         pipeline = new ForwardingPipeline(pool);
-        initialize();
 
-        faceManager = new DefaultFaceManager(pool, onChannelCreated,
-                onChannelCreationFailed, onDataReceived, onInterestReceived);
+        faceManager = new DefaultFaceManager(pool);
     }
 
     /**
@@ -116,9 +64,7 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
             FaceInformationBase fib, ContentStore cs) {
         this.pool = pool;
         pipeline = new ForwardingPipeline(pool);
-        initialize();
-        faceManager = new DefaultFaceManager(pool, onChannelCreated,
-                onChannelCreationFailed, onDataReceived, onInterestReceived);
+        faceManager = new DefaultFaceManager(pool);
         pipeline.setPit(pit);
         pipeline.setFib(fib);
         pipeline.setCs(cs);
@@ -154,13 +100,7 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
             final OnCompleted<FibEntry> onCompleted, OnFailed onFailed) {
         // in the createFace method, the Face should be checked first, if exists,
         // just use that one, if not, create a new one.
-        createFace(uri, new OnCompleted<Face>() {
-            @Override
-            public void onCompleted(Face face) {
-                Pair<FibEntry> entry = pipeline.getFib().insert(prefix, face, cost);
-                onCompleted.onCompleted(entry.getFirst());
-            }
-        }, onFailed);
+        createFace(uri);
     }
 
     public void removeNextHop(Name name, FaceUri uri) {
@@ -190,12 +130,12 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
         return pipeline.getStrategyChoice().list();
     }
 
-    public void createFace(FaceUri remoteUri, OnCompleted<Face> onFaceCreated, OnFailed onFaceCreationFailed) {
-        faceManager.createFaceAndConnect(remoteUri, onFaceCreated, onFaceCreationFailed, this, this);
+    public void createFace(FaceUri remoteUri) {
+        faceManager.createFaceAndConnect(remoteUri);
     }
 
-    public void destroyFace(Face face, OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed) {
-        faceManager.destroyFace(face, onFaceDestroyed, onFaceDestructionFailed);
+    public void destroyFace(Face face) {
+        faceManager.destroyFace(face);
     }
 
     public Collection<? extends Face> listFaces() {

@@ -23,7 +23,7 @@ public interface Face {
 
 	public void sendData(Data data) throws IOException;
 
-	public void close(OnCompleted<Face> onFaceDestroyed, OnFailed onFaceDestructionFailed);
+	public void close() throws IOException;
 
 	public int getFaceId();
 	

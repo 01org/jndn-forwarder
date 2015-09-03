@@ -5,18 +5,15 @@
  */
 package com.intel.jnfd.deamon.face.tcp;
 
-import com.intel.jndn.forwarder.api.Channel;
 import com.intel.jndn.forwarder.api.Face;
 import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
 import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jnfd.deamon.face.AbstractChannel;
-import com.intel.jnfd.deamon.face.AbstractFace;
 import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.FaceUri;
 import com.intel.jnfd.deamon.face.ParseFaceUriException;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.channels.AsynchronousChannelGroup;
@@ -31,71 +28,81 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * Each channel is corresponded to a local port, so two different local FaceUris
+ * will correspond to a channel (one for IPv4 0.0.0.0 and the other one for IPv6
+ * [::]). If IPv4 is enabled on this channel, face relied on IPv4 can be
+ * created, If IPv6 is enabled on this channel, face relied on IPv6 can be
+ * created,
  *
  * @author zht
  */
 public class TcpChannel extends AbstractChannel {
 
-    private static final Logger logger = Logger.getLogger(TcpChannel.class.getName());
-    private final OnInterestReceived onInterestReceived;
-    private final OnDataReceived onDataReceived;
-
     TcpChannel(FaceUri uri, AsynchronousChannelGroup asynchronousChannelGroup,
-            OnInterestReceived onInterestReceived, OnDataReceived onDataReceived)
-            throws IOException {
-        localUri(uri);
-        mAddr = new InetSocketAddress(localUri().getInet(), localUri().getPort());
+            OnCompleted<Face> onFaceCreated,
+            OnFailed onFaceCreationFailed,
+            OnCompleted<Face> onFaceDestroyed,
+            OnFailed onFaceDestructionFailed,
+            OnInterestReceived onInterestReceived,
+            OnDataReceived onDataReceived) {
+        addLocalUri(uri);
+        if (uri.getIsV6()) {
+            enableV6 = true;
+        } else {
+            enableV4 = true;
+        }
+
+        mAddr = new InetSocketAddress(uri.getInet(), uri.getPort());
         this.asynchronousChannelGroup = asynchronousChannelGroup;
-        asynchronousServerSocket
-                = AsynchronousServerSocketChannel.open(asynchronousChannelGroup);
-        asynchronousServerSocket.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-        this.onInterestReceived = onInterestReceived;
+
+        // all the callbacks
+        this.onFaceCreated = onFaceCreated;
+        this.onFaceCreationFailed = onFaceCreationFailed;
+        this.onFaceDestroyed = onFaceDestroyed;
+        this.onFaceDestructionFailed = onFaceDestructionFailed;
         this.onDataReceived = onDataReceived;
+        this.onInterestReceived = onInterestReceived;
     }
 
     public int size() {
         return faceMap.size();
     }
 
-    public void connect(FaceUri faceUri, OnCompleted<Face> onFaceConnected,
-            OnFailed onFailure)
-            throws IOException, InterruptedException, ExecutionException {
-        connect(faceUri, onFaceConnected, onFailure,
-                TimeUnit.SECONDS.toSeconds(4));
+    public void connect(FaceUri faceUri) throws IOException {
+        connect(faceUri, TimeUnit.SECONDS.toSeconds(4));
     }
 
-    public void connect(FaceUri faceUri, OnCompleted<Face> onFaceConnected,
-            OnFailed onFailure, long timeout)
-            throws IOException, InterruptedException, ExecutionException {
-        InetSocketAddress remoteAddr = new InetSocketAddress(faceUri.getInet(), faceUri.getPort());
-        AbstractFace face = faceMap.get(remoteAddr);
+    public void connect(FaceUri faceUri, long timeout) throws IOException {
+        InetSocketAddress remoteAddr
+                = new InetSocketAddress(faceUri.getInet(), faceUri.getPort());
+        Face face = faceMap.get(remoteAddr);
         if (face != null) {
-            onFaceConnected.onCompleted(face);
+            onFaceCreated.onCompleted(face);
             return;
         }
 
-        AsynchronousSocketChannel asynchronousSocketChannel = AsynchronousSocketChannel.open(asynchronousChannelGroup);
+        AsynchronousSocketChannel asynchronousSocket
+                = AsynchronousSocketChannel.open(asynchronousChannelGroup);
         ConnectAttachment connectAttachment = new ConnectAttachment();
-        connectAttachment.asynchronousSocketChannel = asynchronousSocketChannel;
-        asynchronousSocketChannel.connect(remoteAddr, connectAttachment, new ConnectHandler());
+        connectAttachment.asynchronousSocketChannel = asynchronousSocket;
+        asynchronousSocket.connect(remoteAddr, connectAttachment, new ConnectHandler());
     }
 
     /**
      * Open the AsynchronousServerSocket to prepare to accept incoming
      * connections. This method only needs to be called once.
      *
-     * @param onChannelCreated
-     * @param onFailure
+     * @throws java.io.IOException
      */
     @Override
-    public void open(OnCompleted<Channel> onChannelCreated,
-            OnFailed onFailure) {
-        try {
-            System.out.println(mAddr.toString());
+    public void open() throws IOException {
+        if (asynchronousServerSocket == null) {
+            // start to listen
+            asynchronousServerSocket
+                    = AsynchronousServerSocketChannel.open(asynchronousChannelGroup);
+            asynchronousServerSocket.setOption(StandardSocketOptions.SO_REUSEADDR, true);
             asynchronousServerSocket.bind(mAddr);
             asynchronousServerSocket.accept(null, new AcceptHandler());
-        } catch (IOException ex) {
-            onFailure.onFailed(ex);
         }
     }
 
@@ -103,26 +110,86 @@ public class TcpChannel extends AbstractChannel {
         InetSocketAddress remoteSocket = new InetSocketAddress(remoteIP, remotePort);
         return faceMap.get(remoteSocket);
     }
-    
+
     @Override
-    public void destroyFace(FaceUri faceUri, OnCompleted<Face> onFaceDestroyed,
-            OnFailed onFaceDestructionFailed) {
-        InetSocketAddress remoteAddr 
+    public void destroyFace(FaceUri faceUri) {
+        InetSocketAddress remoteAddr
                 = new InetSocketAddress(faceUri.getInet(), faceUri.getPort());
         TcpFace face = faceMap.remove(remoteAddr);
-        face.close(onFaceDestroyed, onFaceDestructionFailed);
+        try {
+            face.close();
+            onFaceDestroyed.onCompleted(face);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+            onFaceDestructionFailed.onFailed(ex);
+        }
     }
 
     @Override
-    public void close(OnCompleted<Channel> onChannelClosed, OnFailed onFailed) {
+    public void close() throws IOException {
+        // close all the Faces first
         for (Face one : faceMap.values()) {
-            one.close(new OnCompleted<Face>() {
+            try {
+                one.close();
+                onFaceDestroyed.onCompleted(one);
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, null, ex);
+                onFaceDestructionFailed.onFailed(ex);
+            }
+        }
+        // close the socket for this channel
+        asynchronousServerSocket.close();
+    }
 
-                @Override
-                public void onCompleted(Face result) {
-                    //TODO
+    /**
+     * Only close one of IPv4 and IPv6 on the channel. After closing, check if
+     * enableV4 and enableV6 are both disabled, if yes, close the socket for
+     * this channel
+     *
+     * @param localFaceUri
+     * @throws java.io.IOException
+     */
+    public void close(FaceUri localFaceUri) throws IOException {
+        if (localFaceUri.getIsV6()) {
+            // If both IPv4 and IPv6 need to be disabled, simply close the channel
+            if (enableV4 == false) {
+                close();
+            } else {
+                enableV6 = false;
+                removeLocalUri(localFaceUri);
+                // close all the IPv6 Faces
+                for (Face one : faceMap.values()) {
+                    if (one.getLocalUri().getIsV6()) {
+                        try {
+                            one.close();
+                            onFaceDestroyed.onCompleted(one);
+                        } catch (IOException ex) {
+                            logger.log(Level.SEVERE, null, ex);
+                            onFaceDestructionFailed.onFailed(ex);
+                        }
+                    }
                 }
-            }, onFailed);
+            }
+        } else {
+            // If both IPv4 and IPv6 need to be disabled, simply close the channel
+            if (enableV6 == false) {
+                close();
+            } else {
+                enableV4 = false;
+                removeLocalUri(localFaceUri);
+                // close all the IPv4 Faces
+                for (Face one : faceMap.values()) {
+                    if (!one.getLocalUri().getIsV6()) {
+                        try {
+                            one.close();
+                            onFaceDestroyed.onCompleted(one);
+                        } catch (IOException ex) {
+                            logger.log(Level.SEVERE, null, ex);
+                            onFaceDestructionFailed.onFailed(ex);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -159,11 +226,11 @@ public class TcpChannel extends AbstractChannel {
             asynchronousServerSocket.accept(attachment, this);
             try {
                 // handle this connection
+                System.out.println("accept connection");
                 createFace(result);
             } catch (IOException ex) {
-                Logger.getLogger(TcpChannel.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (ParseFaceUriException ex) {
-                Logger.getLogger(TcpChannel.class.getName()).log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
+                onFaceCreationFailed.onFailed(ex);
             }
         }
 
@@ -186,9 +253,8 @@ public class TcpChannel extends AbstractChannel {
             try {
                 createFace(attachment.asynchronousSocketChannel);
             } catch (IOException ex) {
-                Logger.getLogger(TcpChannel.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (ParseFaceUriException ex) {
-                Logger.getLogger(TcpChannel.class.getName()).log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
+                onFaceCreationFailed.onFailed(ex);
             }
         }
 
@@ -205,7 +271,7 @@ public class TcpChannel extends AbstractChannel {
      * @throws IOException
      */
     private void createFace(AsynchronousSocketChannel asynchronousSocketChannel)
-            throws IOException, ParseFaceUriException {
+            throws IOException {
         InetSocketAddress remoteSocket
                 = (InetSocketAddress) (asynchronousSocketChannel.getRemoteAddress());
         TcpFace face = null;
@@ -214,23 +280,77 @@ public class TcpChannel extends AbstractChannel {
                     = (InetSocketAddress) (asynchronousSocketChannel.getLocalAddress());
             if (remoteSocket.getAddress().isLoopbackAddress()
                     && localSocket.getAddress().isLoopbackAddress()) {
-                face = new TcpLocalFace(new FaceUri("tcp", localSocket),
-                        new FaceUri("tcp", remoteSocket),
-                        asynchronousSocketChannel, true, false, onDataReceived, onInterestReceived);
+                try {
+                    face = new TcpLocalFace(new FaceUri("tcp", localSocket),
+                            new FaceUri("tcp", remoteSocket),
+                            asynchronousSocketChannel, true, false,
+                            onDataReceived, onInterestReceived);
+                    onFaceCreated.onCompleted(face);
+                } catch (ParseFaceUriException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                    onFaceCreationFailed.onFailed(ex);
+                }
             } else {
-                face = new TcpFace(new FaceUri("tcp", localSocket),
-                        new FaceUri("tcp", remoteSocket),
-                        asynchronousSocketChannel, false, false, onDataReceived, onInterestReceived);
+                try {
+                    face = new TcpFace(new FaceUri("tcp", localSocket),
+                            new FaceUri("tcp", remoteSocket),
+                            asynchronousSocketChannel, false, false,
+                            onDataReceived, onInterestReceived);
+                    onFaceCreated.onCompleted(face);
+                } catch (ParseFaceUriException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                    onFaceCreationFailed.onFailed(ex);
+                }
             }
             faceMap.put(remoteSocket, face);
         } else {
-            // we already have a face for this endpoint, just reuse it
-            asynchronousSocketChannel.close();
+            try {
+                // we already have a face for this endpoint, just reuse it
+                asynchronousSocketChannel.close();
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
         }
+    }
+
+    public boolean isEnabledV4() {
+        return enableV4;
+    }
+
+    public void enableV4() {
+        this.enableV4 = true;
+    }
+
+    public void disableV4() {
+        this.enableV4 = false;
+    }
+
+    public boolean isEnabledV6() {
+        return enableV6;
+    }
+
+    public void enableV6() {
+        this.enableV6 = true;
+    }
+
+    public void disableV6() {
+        this.enableV6 = false;
     }
 
     private InetSocketAddress mAddr = null;
     private final Map<InetSocketAddress, TcpFace> faceMap = new HashMap<>();
+    // server socket used for incoming connection
     private AsynchronousServerSocketChannel asynchronousServerSocket = null;
+    // socket used for outgoing connection
     private AsynchronousChannelGroup asynchronousChannelGroup = null;
+    private boolean enableV4 = false;
+    private boolean enableV6 = false;
+
+    private static final Logger logger = Logger.getLogger(TcpChannel.class.getName());
+    private final OnCompleted<Face> onFaceCreated;
+    private final OnFailed onFaceCreationFailed;
+    private final OnCompleted<Face> onFaceDestroyed;
+    private final OnFailed onFaceDestructionFailed;
+    private final OnInterestReceived onInterestReceived;
+    private final OnDataReceived onDataReceived;
 }

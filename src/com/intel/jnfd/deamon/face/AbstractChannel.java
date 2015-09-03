@@ -6,6 +6,8 @@
 package com.intel.jnfd.deamon.face;
 
 import com.intel.jndn.forwarder.api.Channel;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -14,13 +16,17 @@ import com.intel.jndn.forwarder.api.Channel;
 public abstract class AbstractChannel implements Channel {
 
     @Override
-    public FaceUri localUri() {
-        return localUri;
+    public Set<FaceUri> localUri() {
+        return localUris;
     }
 
-    protected void localUri(FaceUri localUri) {
-        this.localUri = localUri;
+    public void addLocalUri(FaceUri localUri) {
+        localUris.add(localUri);
+    }
+    
+    public void removeLocalUri(FaceUri localUri) {
+        localUris.remove(localUri);
     }
 
-    private FaceUri localUri;
+    private final Set<FaceUri> localUris = new HashSet<>();
 }

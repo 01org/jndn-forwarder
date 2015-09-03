@@ -13,13 +13,15 @@ import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
 import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
+import com.intel.jnfd.deamon.face.ParseFaceUriException;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.channels.AsynchronousChannelGroup;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,61 +30,145 @@ import java.util.logging.Logger;
  *
  * @author zht
  */
-public abstract class TcpFactory implements ProtocolFactory {
+public final class TcpFactory implements ProtocolFactory {
 
-    public TcpFactory(ExecutorService pool) {
+    public TcpFactory(ExecutorService pool,
+            OnCompleted<Channel> onChannelCreated,
+            OnFailed onChannelCreationFailed,
+            OnCompleted<Channel> onChannelDestroyed,
+            OnFailed onChannelDestructionFailed,
+            OnCompleted<Face> onFaceCreated,
+            OnFailed onFaceCreationFailed,
+            OnCompleted<Face> onFaceDestroyed,
+            OnFailed onFaceDestructionFailed,
+            OnDataReceived onDataReceived,
+            OnInterestReceived onInterestReceived) {
+        this.onChannelCreated = onChannelCreated;
+        this.onChannelCreationFailed = onChannelCreationFailed;
+        this.onChannelDestroyed = onChannelDestroyed;
+        this.onChannelDestructionFailed = onChannelDestructionFailed;
+        this.onFaceCreated = onFaceCreated;
+        this.onFaceCreationFailed = onFaceCreationFailed;
+        this.onFaceDestroyed = onFaceDestroyed;
+        this.onFaceDestructionFailed = onFaceDestructionFailed;
+        this.onDataReceived = onDataReceived;
+        this.onInterestReceived = onInterestReceived;
         try {
             this.asynchronousChannelGroup
                     = AsynchronousChannelGroup.withThreadPool(pool);
+            LOCAL_ADDRESS = new InetAddress[]{InetAddress.getByName("0.0.0.0"),
+                InetAddress.getByName("::")};
+            DEFAULT_URI = new FaceUri[]{
+                new FaceUri("tcp4://0.0.0.0:6363"), new FaceUri("tcp6://[::]:6363")};
+        } catch (ParseFaceUriException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        } catch (UnknownHostException ex) {
+            logger.log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            logger.log(Level.SEVERE, null, ex);
+        }
+        // create default channels and start to listen
+        for (FaceUri one : defaultLocalUri()) {
+            Channel channel = createChannel(one);
+            if (channel != null) {
+                try {
+                    channel.open();
+                    onChannelCreated.onCompleted(channel);
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                    onChannelCreationFailed.onFailed(ex);
+                }
+            }
         }
     }
 
     @Override
-    public Channel createChannelAndListen(FaceUri faceUri,
-            OnCompleted<Channel> onChannelCreated,
-            OnFailed onChannelCreationFailed,
-            OnDataReceived onDataReceived,
-            OnInterestReceived onInterestReceived) {
-        TcpChannel channel = null;
-        if (channelMap.containsKey(faceUri)) {
-            channel = channelMap.get(faceUri);
-            onChannelCreated.onCompleted(channelMap.get(faceUri));
-        } else {
-            try {
-                channel = new TcpChannel(faceUri,
-                        asynchronousChannelGroup, onInterestReceived,
-                        onDataReceived);
-                channelMap.put(faceUri, channel);
-                channel.open(onChannelCreated, onChannelCreationFailed);
-            } catch (IOException ex) {
-                onChannelCreationFailed.onFailed(ex);
+    public Channel createChannel(FaceUri faceUri) {
+        // Check if the FaceUri used to create channel is right or not.
+        boolean isLocalFaceUri = true;
+        for (InetAddress one : LOCAL_ADDRESS) {
+            if (faceUri.getInet().equals(one)) {
+                isLocalFaceUri = false;
+                break;
             }
+        }
+        if (isLocalFaceUri) {
+            onChannelDestructionFailed.onFailed(
+                    new IllegalArgumentException("The give FaceUri: " + faceUri
+                            + " is not a local host uri"));
+            return null;
+        }
+
+        TcpChannel channel = null;
+        if (channelMap.containsKey(faceUri.getPort())) {
+            channel = channelMap.get(faceUri.getPort());
+            if (!channel.localUri().contains(faceUri)) {
+                channel.addLocalUri(faceUri);
+                if (faceUri.getIsV6()) {
+                    channel.enableV6();
+                } else {
+                    channel.enableV4();
+                }
+            }
+            onChannelCreated.onCompleted(channel);
+        } else {
+            channel = new TcpChannel(faceUri,
+                    asynchronousChannelGroup,
+                    onFaceCreated,
+                    onFaceCreationFailed,
+                    onFaceDestroyed,
+                    onFaceDestructionFailed,
+                    onInterestReceived,
+                    onDataReceived);
+            channelMap.put(faceUri.getPort(), channel);
+            onChannelCreated.onCompleted(channel);
         }
         return channel;
     }
 
-    @Override
-    public void destroyChannel(FaceUri faceUri,
-            OnCompleted<Channel> onChannelDestroyed,
-            OnFailed onChannelDestructionFailure) {
-        Channel channel = channelMap.remove(faceUri);
-        channel.close(onChannelDestroyed, onChannelDestructionFailure);
+    protected TcpChannel findChannel(FaceUri uri) {
+        TcpChannel channel = channelMap.get(uri.getPort());
+        if (channel == null) {
+            return null;
+        }
+        if (channel.isEnabledV4() && !uri.getIsV6()
+                || channel.isEnabledV6() && uri.getIsV6()) {
+            return channel;
+        }
+        return null;
     }
 
     @Override
-    public void createFace(FaceUri remoteFaceUri, OnCompleted<Face> onFaceCreated,
-            OnFailed onFaceCreationFailed, OnDataReceived onDataReceived,
-            OnInterestReceived onInterestReceived) {
-        for (Map.Entry<FaceUri, TcpChannel> entry : channelMap.entrySet()) {
-            if ((!entry.getKey().getIsV6()) && (!remoteFaceUri.getIsV6())
-                    || entry.getKey().getIsV6() && remoteFaceUri.getIsV6()) {
+    public Collection<? extends Channel> listChannels() {
+        return channelMap.values();
+    }
+
+    @Override
+    public void destroyChannel(FaceUri faceUri) {
+        TcpChannel channel = channelMap.get(faceUri.getPort());
+        try {
+            // close Faces and Channel
+            channel.close(faceUri);
+            // remove it
+            channelMap.remove(faceUri.getPort());
+            onChannelDestroyed.onCompleted(channel);
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+            onChannelDestructionFailed.onFailed(ex);
+        }
+    }
+
+    @Override
+    public void createFace(FaceUri remoteFaceUri) {
+        for (Map.Entry<Integer, TcpChannel> entry : channelMap.entrySet()) {
+            TcpChannel channel = entry.getValue();
+            if ((channel.isEnabledV4() && (!remoteFaceUri.getIsV6()))
+                    || channel.isEnabledV6() && remoteFaceUri.getIsV6()) {
                 try {
-                    entry.getValue().connect(remoteFaceUri, onFaceCreated,
-                            onFaceCreationFailed);
-                } catch (IOException | InterruptedException | ExecutionException ex) {
+                    channel.connect(remoteFaceUri);
+                } catch (IOException ex) {
                     logger.log(Level.SEVERE, null, ex);
+                    onFaceCreationFailed.onFailed(ex);
                 }
                 return;
             }
@@ -93,57 +179,42 @@ public abstract class TcpFactory implements ProtocolFactory {
 
     @Override
     public void createFace(FaceUri localFaceUri, FaceUri remoteFaceUri,
-            OnCompleted<Face> onFaceCreated,
-            OnFailed onFaceCreationFailed, OnDataReceived onDataReceived,
-            OnInterestReceived onInterestReceived) {
+            boolean newChannel) {
         TcpChannel channel = (TcpChannel) findChannel(localFaceUri);
         if (channel == null) {
-            try {
-                channel = new TcpChannel(localFaceUri,
-                        asynchronousChannelGroup, onInterestReceived,
-                        onDataReceived);
-                channelMap.put(localFaceUri, channel);
-            } catch (IOException ex) {
-                logger.log(Level.SEVERE, null, ex);
+            // If do not require to create new channel
+            if (newChannel == false) {
+                onFaceCreationFailed.onFailed(new Exception("No channel found "
+                        + "for " + localFaceUri));
+                return;
             }
+            channel = (TcpChannel) createChannel(localFaceUri);
+            channelMap.put(localFaceUri.getPort(), channel);
         }
         if (channel == null) {
             onFaceCreationFailed.onFailed(new Exception("No channel found or "
                     + "created for " + localFaceUri));
         }
         try {
-            channel.connect(remoteFaceUri, onFaceCreated,
-                    onFaceCreationFailed);
-        } catch (IOException | InterruptedException | ExecutionException ex) {
+            channel.connect(remoteFaceUri);
+        } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
+            onFaceCreationFailed.onFailed(ex);
         }
     }
 
     @Override
-    public void destroyFace(Face face, OnCompleted<Face> onFaceDestroyed,
-            OnFailed onFaceDestructionFailed) {
-        destroyFace(face.getLocalUri(), face.getRemoteUri(),
-                onFaceDestroyed, onFaceDestructionFailed);
+    public void destroyFace(Face face) {
+        destroyFace(face.getLocalUri(), face.getRemoteUri());
     }
 
-    public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri,
-            OnCompleted<Face> onFaceDestroyed,
-            OnFailed onFaceDestructionFailed) {
+    @Override
+    public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri) {
         Channel channel = findChannel(localFaceUri);
         if (channel == null) {
             return;
         }
-        channel.destroyFace(remoteFaceUri, onFaceDestroyed,
-                onFaceDestructionFailed);
-    }
-
-    protected Channel findChannel(FaceUri uri) {
-        return channelMap.get(uri);
-    }
-
-    @Override
-    public Collection<? extends Channel> listChannels() {
-        return channelMap.values();
+        channel.destroyFace(remoteFaceUri);
     }
 
     @Override
@@ -155,13 +226,45 @@ public abstract class TcpFactory implements ProtocolFactory {
         return result;
     }
 
-    public static final int DEFAULT_PORT = 6363;
+    @Override
+    public String[] scheme() {
+        return SCHEME_NAME;
+    }
+
+    public int getDefaultPort() {
+        return DEFAULT_PORT;
+    }
+
+    @Override
+    public FaceUri[] defaultLocalUri() {
+        return DEFAULT_URI;
+    }
+
+    // All the callbacks
+    private final OnCompleted<Channel> onChannelCreated;
+    private final OnFailed onChannelCreationFailed;
+    private final OnCompleted<Channel> onChannelDestroyed;
+    private final OnFailed onChannelDestructionFailed;
+    private final OnCompleted<Face> onFaceCreated;
+    private final OnFailed onFaceCreationFailed;
+    private final OnCompleted<Face> onFaceDestroyed;
+    private final OnFailed onFaceDestructionFailed;
+    private final OnDataReceived onDataReceived;
+    private final OnInterestReceived onInterestReceived;
+
+    private static InetAddress LOCAL_ADDRESS[];
+    private static final int DEFAULT_PORT = 6363;
+    private static final String SCHEME_NAME[] = {"tcp4", "tcp6"};
+    private static final String DEFAULT_HOST = "::";
+    private static FaceUri[] DEFAULT_URI = null;
 
     private static final Logger logger = Logger.getLogger(TcpFactory.class.getName());
-    private final Map<FaceUri, TcpChannel> channelMap = new HashMap<>();
+    // The port # is the entry for the channel, since IPv4 and IPv6 sockes can
+    // not be actived seperately
+    private final Map<Integer, TcpChannel> channelMap = new HashMap<>();
     private AsynchronousChannelGroup asynchronousChannelGroup = null;
 
-	//    private Set<Node> prohibitedNodes = new HashSet<Node>();
+    //    private Set<Node> prohibitedNodes = new HashSet<Node>();
     //    TODO: if the prohibition function is necessary, we can implement this funtion 
     //    in the future;
 }
