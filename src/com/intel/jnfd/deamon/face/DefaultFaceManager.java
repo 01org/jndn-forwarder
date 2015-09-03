@@ -5,6 +5,7 @@
  */
 package com.intel.jnfd.deamon.face;
 
+import com.intel.jndn.forwarder.Forwarder;
 import com.intel.jndn.forwarder.api.Channel;
 import com.intel.jndn.forwarder.api.Face;
 import com.intel.jndn.forwarder.api.FaceManager;
@@ -32,8 +33,9 @@ import net.named_data.jndn.Interest;
  */
 public final class DefaultFaceManager implements FaceManager {
 
-    public DefaultFaceManager(ExecutorService pool) {
+    public DefaultFaceManager(ExecutorService pool, Forwarder forwarder) {
         this.pool = pool;
+        this.forwarder = forwarder;
 
         registerProtocol(new TcpFactory(this.pool,
                 onChannelCreated,
@@ -48,8 +50,8 @@ public final class DefaultFaceManager implements FaceManager {
                 onInterestReceived));
     }
 
-    public DefaultFaceManager() {
-        this(Executors.newCachedThreadPool());
+    public DefaultFaceManager(Forwarder forwarder) {
+        this(Executors.newCachedThreadPool(), forwarder);
     }
 
     @Override
@@ -187,6 +189,7 @@ public final class DefaultFaceManager implements FaceManager {
 
     private final Map<String, ProtocolFactory> protocols = new HashMap<>();
     private final ExecutorService pool;
+    private final Forwarder forwarder;
     private static final Logger logger = Logger.getLogger(DefaultFaceManager.class.getName());
 
     // All the callbacks
@@ -258,7 +261,7 @@ public final class DefaultFaceManager implements FaceManager {
 
         @Override
         public void onData(Data data, Face incomingFace) {
-
+            forwarder.onData(data, incomingFace);
         }
 
     };
@@ -266,7 +269,7 @@ public final class DefaultFaceManager implements FaceManager {
 
         @Override
         public void onInterest(Interest interest, Face face) {
-
+            forwarder.onInterest(interest, face);
         }
 
     };

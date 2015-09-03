@@ -47,7 +47,7 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
         pool = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
         pipeline = new ForwardingPipeline(pool);
 
-        faceManager = new DefaultFaceManager(pool);
+        faceManager = new DefaultFaceManager(pool, this);
     }
 
     /**
@@ -64,7 +64,7 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
             FaceInformationBase fib, ContentStore cs) {
         this.pool = pool;
         pipeline = new ForwardingPipeline(pool);
-        faceManager = new DefaultFaceManager(pool);
+        faceManager = new DefaultFaceManager(pool, this);
         pipeline.setPit(pit);
         pipeline.setFib(fib);
         pipeline.setCs(cs);
@@ -144,9 +144,12 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 
     @Override
     public void onData(Data data, Face incomingFace) {
-        List<PitEntry> matches = pipeline.getPit().findAllMatches(data);
-        for (PitEntry entry : matches) {
-            // TODO: satisfy interests here
+        List<List<PitEntry>> matches = pipeline.getPit().findAllMatches(data);
+        for (List<PitEntry> entry : matches) {
+            for (PitEntry one : entry) {
+
+                // TODO: satisfy interests here
+            }
         }
 
         pipeline.getCs().insert(data, matches.isEmpty());

@@ -21,7 +21,9 @@ public interface PendingInterestTable {
 
 	public void erase(PitEntry pitEntry);
 
-	public List<PitEntry> findAllMatches(Data data);
+	public List<List<PitEntry>> findAllMatches(Data data);
+        
+        public List<PitEntry> findLongestPrefixMatches(Data data);
 
 	public int size();
 }

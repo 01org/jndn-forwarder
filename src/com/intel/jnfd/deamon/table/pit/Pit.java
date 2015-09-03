@@ -54,19 +54,28 @@ public class Pit implements PendingInterestTable {
     }
 
     @Override
-    public List<PitEntry> findAllMatches(Data data) {
-		List<PitEntry> matches = pit.findLongestPrefixMatch(data.getName());
-		return matches == null ? Collections.EMPTY_LIST : matches;
+    public List<PitEntry> findLongestPrefixMatches(Data data) {
+        List<PitEntry> matches = pit.findLongestPrefixMatch(data.getName());
+        return matches == null ? Collections.EMPTY_LIST : matches;
+    }
+    
+    @Override
+    public List<List<PitEntry>> findAllMatches(Data data) {
+        List<List<PitEntry>> matches = pit.findAllMatch(data.getName());
+        return matches == null ? Collections.EMPTY_LIST : matches;
     }
 
-	@Override
+    @Override
     public void erase(PitEntry pitEntry) {
         List<PitEntry> pitEntries = pit.findExactMatch(pitEntry.getName());
         if (pitEntries == null) {
             return;
         }
         pitEntries.remove(pitEntry);
+        if(pitEntries.isEmpty()) {
+            pit.erase(pitEntry.getName());
+        }
     }
 
-    private HashMapRepo<List<PitEntry>> pit = new HashMapRepo<>();
+    private final HashMapRepo<List<PitEntry>> pit = new HashMapRepo<>();
 }

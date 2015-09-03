@@ -6,6 +6,7 @@
 package com.intel.jndn.forwarder.api;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.named_data.jndn.Name;
@@ -13,6 +14,7 @@ import net.named_data.jndn.Name;
 /**
  *
  * @author Andrew Brown <andrew.brown@intel.com>
+ * @param <V>
  */
 public interface NameTable<V> {
 
@@ -27,6 +29,8 @@ public interface NameTable<V> {
 	public V findExactMatch(Name prefix);
 
 	public V findLongestPrefixMatch(Name prefix);
+        
+        public List<V> findAllMatch(Name prefix);
 
 	public boolean hasKey(Name key);
 

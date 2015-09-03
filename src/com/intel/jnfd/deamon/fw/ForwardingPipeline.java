@@ -47,7 +47,7 @@ public class ForwardingPipeline {
     public ForwardingPipeline(ScheduledExecutorService scheduler) {
         //TODO: find a right way to initialize the shcheduler
         this.scheduler = scheduler;
-        
+
         faceTable = new FaceTable(this);
         pit = new Pit();
         fib = new Fib();
@@ -81,7 +81,7 @@ public class ForwardingPipeline {
     public FaceInformationBase getFib() {
         return fib;
     }
-    
+
     public void setFib(FaceInformationBase fib) {
         this.fib = fib;
     }
@@ -89,7 +89,7 @@ public class ForwardingPipeline {
     public PendingInterestTable getPit() {
         return pit;
     }
-    
+
     public void setPit(PendingInterestTable pit) {
         this.pit = pit;
     }
@@ -97,7 +97,7 @@ public class ForwardingPipeline {
     public ContentStore getCs() {
         return cs;
     }
-    
+
     public void setCs(ContentStore cs) {
         this.cs = cs;
     }
@@ -220,7 +220,7 @@ public class ForwardingPipeline {
     private void onInterestLoop(Face inFace, Interest interest, PitEntry pitEntry) {
         // Do nothing
 
-		// TODO: drop the interest. Since the c++ code hasn't implemented this 
+        // TODO: drop the interest. Since the c++ code hasn't implemented this 
         // method, we will also omit it here
     }
 
@@ -276,7 +276,7 @@ public class ForwardingPipeline {
             Random randomGenerator = new Random();
             byte bytes[] = new byte[4];
             randomGenerator.nextBytes(bytes);
-			// notice that this is right, if we set the nonce first, the jndn
+            // notice that this is right, if we set the nonce first, the jndn
             // library will not change the nonce
             interest.setNonce(new Blob(bytes));
         }
@@ -362,7 +362,7 @@ public class ForwardingPipeline {
         }
 
         // PIT match
-        List<PitEntry> pitMatches = pit.findAllMatches(data);
+        List<List<PitEntry>> pitMatches = pit.findAllMatches(data);
         if (pitMatches == null || pitMatches.isEmpty()) {
             // goto Data unsolicited pipeline
             onDataUnsolicited(inFace, data);
@@ -374,35 +374,37 @@ public class ForwardingPipeline {
 
         Set<Face> pendingDownstreams = new HashSet<>();
         // foreach PitEntry
-        for (PitEntry onePitEntry : pitMatches) {
-            // cancel unsatisfy & straggler timer
-            cancelUnsatisfyAndStragglerTimer(onePitEntry);
+        for (List<PitEntry> oneList : pitMatches) {
+            for (PitEntry onePitEntry : oneList) {
+                // cancel unsatisfy & straggler timer
+                cancelUnsatisfyAndStragglerTimer(onePitEntry);
 
-            // remember pending downstreams
-            List<PitInRecord> inRecords = onePitEntry.getInRecords();
-            for (PitInRecord oneInRecord : inRecords) {
-                if (oneInRecord.getExpiry() > System.currentTimeMillis()) {
-                    pendingDownstreams.add(oneInRecord.getFace());
+                // remember pending downstreams
+                List<PitInRecord> inRecords = onePitEntry.getInRecords();
+                for (PitInRecord oneInRecord : inRecords) {
+                    if (oneInRecord.getExpiry() > System.currentTimeMillis()) {
+                        pendingDownstreams.add(oneInRecord.getFace());
+                    }
                 }
+
+                // invoke PIT satisfy callback
+                Strategy effectiveStrategy
+                        = strategyChoice.findEffectiveStrategy(onePitEntry.getName());
+                effectiveStrategy.beforeSatisfyInterest(onePitEntry, inFace, data);
+
+                // Dead Nonce List insert if necessary (for OutRecord of inFace)
+                insertDeadNonceList(onePitEntry, true,
+                        (long) Math.round(data.getMetaInfo().getFreshnessPeriod()),
+                        inFace);
+
+                // mark PIT satisfied
+                onePitEntry.deleteInRecords();
+                onePitEntry.deleteOutRecord(inFace);
+
+                // set PIT straggler timer
+                setStragglerTimer(onePitEntry, true,
+                        (long) Math.round(data.getMetaInfo().getFreshnessPeriod()));
             }
-
-            // invoke PIT satisfy callback
-            Strategy effectiveStrategy
-                    = strategyChoice.findEffectiveStrategy(onePitEntry.getName());
-            effectiveStrategy.beforeSatisfyInterest(onePitEntry, inFace, data);
-
-            // Dead Nonce List insert if necessary (for OutRecord of inFace)
-            insertDeadNonceList(onePitEntry, true,
-                    (long) Math.round(data.getMetaInfo().getFreshnessPeriod()),
-                    inFace);
-
-            // mark PIT satisfied
-            onePitEntry.deleteInRecords();
-            onePitEntry.deleteOutRecord(inFace);
-
-            // set PIT straggler timer
-            setStragglerTimer(onePitEntry, true,
-                    (long) Math.round(data.getMetaInfo().getFreshnessPeriod()));
         }
 
         // foreach pending downstream
@@ -469,7 +471,7 @@ public class ForwardingPipeline {
         }
         long lastExpiryFromNow = lastExpiry - System.currentTimeMillis();
         if (lastExpiryFromNow < 0) {
-			// TODO: this message is copied from c++ code
+            // TODO: this message is copied from c++ code
             // all InRecords are already expired; will this happen?
         }
 
@@ -478,7 +480,7 @@ public class ForwardingPipeline {
 
             @Override
             public void run() {
-				// TODO: make sure if we need to change the pointer pitEntry or 
+                // TODO: make sure if we need to change the pointer pitEntry or 
                 // not.
                 // Since it is an inner class, we cannot change the pointer.
                 onInterestUnsatisfied(pitEntry);
@@ -541,7 +543,7 @@ public class ForwardingPipeline {
         }
     }
 
-	//    private void dispatchToStrategy(PitEntry pitEntry, Trigger trigger) {
+    //    private void dispatchToStrategy(PitEntry pitEntry, Trigger trigger) {
     //        Strategy effectiveStrategy
     //                = strategyChoice.findEffectiveStrategy(pitEntry.getName());
     //        trigger.trigger(effectiveStrategy);

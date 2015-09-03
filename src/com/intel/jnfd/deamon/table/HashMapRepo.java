@@ -6,7 +6,9 @@
 package com.intel.jnfd.deamon.table;
 
 import com.intel.jndn.forwarder.api.NameTable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -31,25 +33,40 @@ public class HashMapRepo<V> implements NameTable<V> {
 
     @Override
     public V findLongestPrefixMatch(Name prefix) {
+        V result = null;
         for (int i = prefix.size(); i >= 0; i--) {
             Name p = prefix.getPrefix(i);
-            V r = findExactMatch(p);
-            if (r != null) {
-                return r;
+            result = findExactMatch(p);
+            if (result != null) {
+                return result;
             }
         }
         return null;
     }
 
     public V findLongestPrefixMatch(Name prefix, EntryFilter filter) {
+        V result = null;
         for (int i = prefix.size(); i >= 0; i--) {
             Name p = prefix.getPrefix(i);
-            V r = findExactMatch(p);
-            if (r != null && filter.filt(r)) {
-                return r;
+            result = findExactMatch(p);
+            if (result != null && filter.filt(result)) {
+                return result;
             }
         }
         return null;
+    }
+
+    @Override
+    public List<V> findAllMatch(Name prefix) {
+        List<V> result = new ArrayList<>();
+        for (int i = prefix.size(); i >= 0; i--) {
+            Name p = prefix.getPrefix(i);
+            V one = findExactMatch(p);
+            if (one != null) {
+                result.add(one);
+            }
+        }
+        return result.isEmpty() ? null : result;
     }
 
     @Override
