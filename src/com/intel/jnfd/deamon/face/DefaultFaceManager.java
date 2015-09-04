@@ -5,7 +5,6 @@
  */
 package com.intel.jnfd.deamon.face;
 
-import com.intel.jndn.forwarder.Forwarder;
 import com.intel.jndn.forwarder.api.Channel;
 import com.intel.jndn.forwarder.api.Face;
 import com.intel.jndn.forwarder.api.FaceManager;
@@ -272,6 +271,7 @@ public final class DefaultFaceManager implements FaceManager {
 
         @Override
         public void onInterest(Interest interest, Face face) {
+            logger.info("OnInterest is called");
             pipeline.onInterest(face, interest);
         }
 

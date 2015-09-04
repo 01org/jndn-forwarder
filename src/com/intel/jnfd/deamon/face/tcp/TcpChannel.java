@@ -226,7 +226,6 @@ public class TcpChannel extends AbstractChannel {
             asynchronousServerSocket.accept(attachment, this);
             try {
                 // handle this connection
-                System.out.println("accept connection");
                 createFace(result);
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, null, ex);

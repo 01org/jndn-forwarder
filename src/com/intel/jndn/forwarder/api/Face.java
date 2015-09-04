@@ -5,8 +5,6 @@
  */
 package com.intel.jndn.forwarder.api;
 
-import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
-import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jnfd.deamon.face.FaceUri;
 import java.io.IOException;
 import net.named_data.jndn.Data;
@@ -19,9 +17,9 @@ import net.named_data.jndn.Interest;
  */
 public interface Face {
 
-	public void sendInterest(Interest interest) throws IOException;
+	public void sendInterest(Interest interest);
 
-	public void sendData(Data data) throws IOException;
+	public void sendData(Data data);
 
 	public void close() throws IOException;
 

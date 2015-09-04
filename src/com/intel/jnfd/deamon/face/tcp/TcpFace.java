@@ -41,13 +41,18 @@ public class TcpFace extends AbstractFace {
             OnInterestReceived onInterestReceived) {
         super(localUri, remoteUri, isLocal, isMultiAccess);
         this.asynchronousSocketChannel = asynchronousSocketChannel;
-        ReceiveHandler receiveHandler = new ReceiveHandler();
-        this.asynchronousSocketChannel.read(inputBuffer, null, receiveHandler);
 
         // callbacks
         this.onInterestReceived = onInterestReceived;
         this.onDataReceived = onDataReceived;
         this.elementReader = new ElementReader(new Deserializer(onDataReceived, onInterestReceived));
+
+        
+        ReceiveHandler receiveHandler = new ReceiveHandler();
+        
+        inputBuffer.limit(inputBuffer.capacity());
+        inputBuffer.position(0);
+        this.asynchronousSocketChannel.read(inputBuffer, null, receiveHandler);
     }
 
     @Override
@@ -76,8 +81,8 @@ public class TcpFace extends AbstractFace {
     @Override
     public void sendData(Data data) {
         boolean wasQueueEmpty = sendQueue.isEmpty();
-        sendQueue.add(data.wireEncode());
-        if (wasQueueEmpty) {
+        boolean added = sendQueue.add(data.wireEncode(new TlvWireFormat()));
+        if (added && wasQueueEmpty) {
             sendFromQueue();
         }
     }
@@ -95,6 +100,7 @@ public class TcpFace extends AbstractFace {
      * Check the sendQueue and send data out.
      */
     protected void sendFromQueue() {
+        logger.info("send data");
         asynchronousSocketChannel.write(sendQueue.poll().buf(), null, new SendHandler());
     }
 
@@ -107,14 +113,18 @@ public class TcpFace extends AbstractFace {
         @Override
         public void completed(Integer result, Void attachment) {
             if (result != -1) {
-                asynchronousSocketChannel.read(inputBuffer, attachment, this);
-                System.out.println("receive something");
+                System.out.println(inputBuffer);
+                inputBuffer.flip();
                 try {
+                    logger.info("decode the packet");
                     elementReader.onReceivedData(inputBuffer);
 
                 } catch (EncodingException ex) {
                     logger.log(Level.WARNING, "Failed to decode bytes on face.", ex);
                 }
+                inputBuffer.limit(inputBuffer.capacity());
+                inputBuffer.position(0);
+                asynchronousSocketChannel.read(inputBuffer, attachment, this);
             }
         }
 
@@ -139,13 +149,18 @@ public class TcpFace extends AbstractFace {
 
         @Override
         public final void onReceivedElement(ByteBuffer element) throws EncodingException {
+            logger.info("onReceivedElement is called");
             if (element.get(0) == Tlv.Interest || element.get(0) == Tlv.Data) {
+                logger.info("receive Data or Interest packet");
                 TlvDecoder decoder = new TlvDecoder(element);
                 if (decoder.peekType(Tlv.Interest, element.remaining())) {
+                    logger.info("receive Interest packet");
                     Interest interest = new Interest();
                     interest.wireDecode(element, TlvWireFormat.get());
                     onInterestReceived.onInterest(interest, TcpFace.this);
+
                 } else if (decoder.peekType(Tlv.Data, element.remaining())) {
+                    logger.info("receive Data packet");
                     Data data = new Data();
                     data.wireDecode(element, TlvWireFormat.get());
                     onDataReceived.onData(data, TcpFace.this);
@@ -164,7 +179,8 @@ public class TcpFace extends AbstractFace {
         @Override
         public void completed(Integer result, Void attachment) {
             if (!sendQueue.isEmpty()) {
-                asynchronousSocketChannel.write(inputBuffer, attachment, this);
+                System.out.println("send something");
+                asynchronousSocketChannel.write(sendQueue.poll().buf(), attachment, this);
             }
         }
 
@@ -179,7 +195,7 @@ public class TcpFace extends AbstractFace {
     protected AsynchronousSocketChannel asynchronousSocketChannel;
     private final ByteBuffer inputBuffer = ByteBuffer.allocate(Common.MAX_NDN_PACKET_SIZE);
     private final Queue<Blob> sendQueue = new ConcurrentLinkedQueue<>();
-    private ElementReader elementReader = new ElementReader(new Deserializer(null, null));
+    private final ElementReader elementReader;
     private final OnInterestReceived onInterestReceived;
     private final OnDataReceived onDataReceived;
 }
