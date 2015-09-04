@@ -72,9 +72,9 @@ public class ForwardingPipeline {
 		faceTable.add(face);
 	}
 
-	public void onInterest(Face face, Interest interest) throws Exception {
-		onIncomingInterest(face, interest);
-	}
+    public void onInterest(Face face, Interest interest) throws IOException {
+        onIncomingInterest(face, interest);
+    }
 
 	public void onData(Face face, Data data) {
 		onIncomingData(face, data);
@@ -116,14 +116,13 @@ public class ForwardingPipeline {
 		return deadNonceList;
 	}
 
-	/**
-	 * incoming Interest pipeline
-	 *
-	 * @param inFace
-	 * @param interest
-	 */
-	private void onIncomingInterest(Face inFace, Interest interest)
-			throws Exception {
+    /**
+     * incoming Interest pipeline
+     *
+     * @param inFace
+     * @param interest
+     */
+    private void onIncomingInterest(Face inFace, Interest interest) throws IOException {
 // TODO: in the c++ code, they set the incoming FaceId, but jndn does
 // not provide similiar function. Need to find a solution
 // interest.setIncomingFaceId();

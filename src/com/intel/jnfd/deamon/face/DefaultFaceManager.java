@@ -15,6 +15,7 @@ import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.tcp.TcpFactory;
+import com.intel.jnfd.deamon.fw.ForwardingPipeline;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,9 +34,9 @@ import net.named_data.jndn.Interest;
  */
 public final class DefaultFaceManager implements FaceManager {
 
-    public DefaultFaceManager(ExecutorService pool, Forwarder forwarder) {
+    public DefaultFaceManager(ExecutorService pool, ForwardingPipeline pipeline) {
         this.pool = pool;
-        this.forwarder = forwarder;
+        this.pipeline = pipeline;
 
         registerProtocol(new TcpFactory(this.pool,
                 onChannelCreated,
@@ -50,8 +51,8 @@ public final class DefaultFaceManager implements FaceManager {
                 onInterestReceived));
     }
 
-    public DefaultFaceManager(Forwarder forwarder) {
-        this(Executors.newCachedThreadPool(), forwarder);
+    public DefaultFaceManager(ForwardingPipeline pipeline) {
+        this(Executors.newCachedThreadPool(), pipeline);
     }
 
     @Override
@@ -189,7 +190,7 @@ public final class DefaultFaceManager implements FaceManager {
 
     private final Map<String, ProtocolFactory> protocols = new HashMap<>();
     private final ExecutorService pool;
-    private final Forwarder forwarder;
+    private final ForwardingPipeline pipeline;
     private static final Logger logger = Logger.getLogger(DefaultFaceManager.class.getName());
 
     // All the callbacks
@@ -229,7 +230,9 @@ public final class DefaultFaceManager implements FaceManager {
 
         @Override
         public void onCompleted(Object result) {
-
+            if (result instanceof Face) {
+                pipeline.addFace((Face) result);
+            }
         }
 
     };
@@ -261,7 +264,7 @@ public final class DefaultFaceManager implements FaceManager {
 
         @Override
         public void onData(Data data, Face incomingFace) {
-            forwarder.onData(data, incomingFace);
+            pipeline.onData(incomingFace, data);
         }
 
     };
@@ -269,7 +272,7 @@ public final class DefaultFaceManager implements FaceManager {
 
         @Override
         public void onInterest(Interest interest, Face face) {
-            forwarder.onInterest(interest, face);
+            pipeline.onInterest(face, interest);
         }
 
     };
