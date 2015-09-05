@@ -29,7 +29,7 @@ import net.named_data.jndn.Name;
  */
 public class BestRouteStrategy2 extends Strategy {
 
-    public static final Name STRATEGY_NAME 
+    public static final Name STRATEGY_NAME
             = new Name("ndn:/localhost/nfd/strategy/best-route/%FD%03");
 
     /**
@@ -65,11 +65,13 @@ public class BestRouteStrategy2 extends Strategy {
 
         if (suppression == RetxSuppression.Result.NEW) {
             // forward to nexthop with lowest cost except downstream
-            for (FibNextHop one : nextHopList) {
-                if (predicate_NextHop_eligible(pitEntry, one, inFace.getFaceId(),
-                        false, 0)) {
-                    nextHop = one;
-                    break;
+            if (nextHopList != null) {
+                for (FibNextHop one : nextHopList) {
+                    if (predicate_NextHop_eligible(pitEntry, one, inFace.getFaceId(),
+                            false, 0)) {
+                        nextHop = one;
+                        break;
+                    }
                 }
             }
 
@@ -95,16 +97,16 @@ public class BestRouteStrategy2 extends Strategy {
                 break;
             }
         }
-        if(nextHop != null) {
+        if (nextHop != null) {
             Face outFace = nextHop.getFace();
             sendInterest(pitEntry, outFace, false);
             return;
         }
-        
+
         // find an eligible upstream that is used earliest
         nextHop = findEligibleNextHopWithEarliestOutRecord(
                 pitEntry, nextHopList, inFace.getFaceId());
-        if(nextHop != null) {
+        if (nextHop != null) {
             Face outFace = nextHop.getFace();
             sendInterest(pitEntry, outFace, false);
         }
@@ -112,12 +114,12 @@ public class BestRouteStrategy2 extends Strategy {
 
     @Override
     public void beforeSatisfyInterest(PitEntry pitEntry, Face inFace, Data data) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        //do nothing
     }
 
     @Override
     public void beforeExpirePendingInterest(PitEntry pitEntry) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        // do nothing
     }
 
     /**
@@ -200,8 +202,8 @@ public class BestRouteStrategy2 extends Strategy {
     private RetxSuppressionExponential retxSuppression
             = new RetxSuppressionExponential();
 
-	@Override
-	public Face[] determineOutgoingFaces(Interest interest, ForwardingPipeline forwarder) {
-		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-	}
+    @Override
+    public Face[] determineOutgoingFaces(Interest interest, ForwardingPipeline forwarder) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

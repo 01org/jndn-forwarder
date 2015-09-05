@@ -134,7 +134,7 @@ public class ForwardingPipeline {
             return;
         }
 
-		// handle registration commands; TODO this should be applied as an internal
+        // handle registration commands; TODO this should be applied as an internal
         // face to the FIB but current interface does not allow this
         if (prefixRegistration.matches(interest.getName())) {
             prefixRegistration.call(interest, inFace, this);
@@ -184,12 +184,14 @@ public class ForwardingPipeline {
          */
         @Override
         public void onContentStoreMiss(Interest interest) {
+            logger.info("onContentStoreMiss");
             // insert InRecord
             pitEntry.insertOrUpdateInRecord(face, interest);
             // set PIT unsatisfy timer
             setUnsatisfyTimer(pitEntry);
             // FIB lookup
             FibEntry fibEntry = fib.findLongestPrefixMatch(pitEntry.getName());
+            logger.info("find fib" + fibEntry.getNextHopList().get(0).getFace().toString());
             // dispatch to strategy
             Strategy effectiveStrategy
                     = strategyChoice.findEffectiveStrategy(pitEntry.getName());
@@ -205,6 +207,7 @@ public class ForwardingPipeline {
          */
         @Override
         public void onContentStoreHit(Interest interest, Data data) {
+            logger.info("content store hit");
 			// TODO: in the c++ code, they set the incoming FaceId, but jndn does
             // not provide similiar function. Need to find a solution
             // data.setIncomingFaceId();
@@ -226,9 +229,10 @@ public class ForwardingPipeline {
      * @param pitEntry
      */
     private void onInterestLoop(Face inFace, Interest interest, PitEntry pitEntry) {
+        logger.info("interest loop");
         // Do nothing
 
-		// TODO: drop the interest. Since the c++ code hasn't implemented this 
+        // TODO: drop the interest. Since the c++ code hasn't implemented this 
         // method, we will also omit it here
     }
 
@@ -284,13 +288,13 @@ public class ForwardingPipeline {
             Random randomGenerator = new Random();
             byte bytes[] = new byte[4];
             randomGenerator.nextBytes(bytes);
-			// notice that this is right, if we set the nonce first, the jndn
+            // notice that this is right, if we set the nonce first, the jndn
             // library will not change the nonce
             interest.setNonce(new Blob(bytes));
         }
 
         // insert OutRecord
-        pitEntry.insertOrUpdateInRecord(outFace, interest);
+        pitEntry.insertOrUpdateOutRecord(outFace, interest);
 
         outFace.sendInterest(interest);
     }
@@ -355,6 +359,7 @@ public class ForwardingPipeline {
 // not provide similiar function. Need to find a solution
 // data.setIncomingFaceId();
 //        data.setIncomingFaceId();
+        logger.info("on incomingdata");
 
         // /localhost scope control
         boolean isViolatingLocalhost = !inFace.isLocal()
@@ -467,16 +472,18 @@ public class ForwardingPipeline {
         }
         long lastExpiryFromNow = lastExpiry - System.currentTimeMillis();
         if (lastExpiryFromNow < 0) {
-			// TODO: this message is copied from c++ code
+            // TODO: this message is copied from c++ code
             // all InRecords are already expired; will this happen?
         }
 
-        pitEntry.unsatisfyTimer.cancel(false);
+        if (pitEntry.unsatisfyTimer != null) {
+            pitEntry.unsatisfyTimer.cancel(false);
+        }
         pitEntry.unsatisfyTimer = scheduler.schedule(new Runnable() {
 
             @Override
             public void run() {
-				// TODO: make sure if we need to change the pointer pitEntry or 
+                // TODO: make sure if we need to change the pointer pitEntry or 
                 // not.
                 // Since it is an inner class, we cannot change the pointer.
                 onInterestUnsatisfied(pitEntry);
@@ -488,7 +495,9 @@ public class ForwardingPipeline {
     private void setStragglerTimer(final PitEntry pitEntry,
             final boolean isSatisfied, final long dataFreshnessPeriod) {
         long stragglerTime = 100;
-        pitEntry.stragglerTimer.cancel(false);
+        if (pitEntry.stragglerTimer != null) {
+            pitEntry.stragglerTimer.cancel(false);
+        }
         pitEntry.stragglerTimer = scheduler.schedule(new Runnable() {
 
             @Override
@@ -501,8 +510,12 @@ public class ForwardingPipeline {
     }
 
     private void cancelUnsatisfyAndStragglerTimer(PitEntry pitEntry) {
-        pitEntry.unsatisfyTimer.cancel(false);
-        pitEntry.stragglerTimer.cancel(false);
+        if (pitEntry.unsatisfyTimer != null) {
+            pitEntry.unsatisfyTimer.cancel(false);
+        }
+        if (pitEntry.stragglerTimer != null) {
+            pitEntry.stragglerTimer.cancel(false);
+        }
     }
 
     private void insertDeadNonceList(PitEntry pitEntry, boolean isSatisfied,
@@ -539,7 +552,7 @@ public class ForwardingPipeline {
         }
     }
 
-	//    private void dispatchToStrategy(PitEntry pitEntry, Trigger trigger) {
+    //    private void dispatchToStrategy(PitEntry pitEntry, Trigger trigger) {
     //        Strategy effectiveStrategy
     //                = strategyChoice.findEffectiveStrategy(pitEntry.getName());
     //        trigger.trigger(effectiveStrategy);

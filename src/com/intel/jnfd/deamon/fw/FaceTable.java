@@ -6,6 +6,7 @@
 package com.intel.jnfd.deamon.fw;
 
 import com.intel.jndn.forwarder.api.Face;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -45,7 +46,6 @@ public class FaceTable {
     public void addImp(Face face, int faceId) {
         face.setFaceId(faceId);
         faces.put(faceId, face);
-
     }
 
     // add a special Face with a reserved FaceId
@@ -76,7 +76,7 @@ public class FaceTable {
         forwarder.getFib().removeNextHopFromAllEntries(face);
     }
 
-    private ForwardingPipeline forwarder;
+    private final ForwardingPipeline forwarder;
     private int lastFaceId;
-    private Map<Integer, Face> faces;
+    private final Map<Integer, Face> faces = new HashMap<>();
 }

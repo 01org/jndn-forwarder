@@ -263,6 +263,7 @@ public final class DefaultFaceManager implements FaceManager {
 
         @Override
         public void onData(Data data, Face incomingFace) {
+            logger.info("OnData is called");
             pipeline.onData(incomingFace, data);
         }
 

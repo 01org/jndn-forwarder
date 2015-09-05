@@ -18,8 +18,10 @@ public class PitInRecord extends PitFaceRecord{
         super(face);
     }
  
+    @Override
     public void update(Interest interest) {
         super.update(interest);
+        this.interest = interest;
     }
 
     public Interest getInterest() {

@@ -57,8 +57,11 @@ public class TcpFace extends AbstractFace {
 
     @Override
     public void sendInterest(Interest interest) {
+        logger.info("send interest");
         boolean wasQueueEmpty = sendQueue.isEmpty();
-        sendQueue.add(interest.wireEncode());
+        // FIX: since the default wireformat will be null, so here a new 
+        // TlvWireFormat is created.
+        sendQueue.add(interest.wireEncode(new TlvWireFormat()));
         if (wasQueueEmpty) {
             sendFromQueue();
         }
@@ -80,7 +83,10 @@ public class TcpFace extends AbstractFace {
 
     @Override
     public void sendData(Data data) {
+        logger.info("send data");
         boolean wasQueueEmpty = sendQueue.isEmpty();
+        // FIX: since the default wireformat will be null, so here a new 
+        // TlvWireFormat is created.
         boolean added = sendQueue.add(data.wireEncode(new TlvWireFormat()));
         if (added && wasQueueEmpty) {
             sendFromQueue();
@@ -100,7 +106,7 @@ public class TcpFace extends AbstractFace {
      * Check the sendQueue and send data out.
      */
     protected void sendFromQueue() {
-        logger.info("send data");
+        logger.info("send from queue");
         asynchronousSocketChannel.write(sendQueue.poll().buf(), null, new SendHandler());
     }
 
