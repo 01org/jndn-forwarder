@@ -236,6 +236,7 @@ public class TcpChannel extends AbstractChannel {
         @Override
         public void failed(Throwable exc, AcceptAttachment attachment) {
             //TODO: fix this in the future;
+            logger.log(Level.INFO, "connetion is closed");
         }
 
     }
@@ -260,6 +261,7 @@ public class TcpChannel extends AbstractChannel {
         @Override
         public void failed(Throwable exc, ConnectAttachment attachment) {
             //TODO: fix this in the future;
+            logger.log(Level.INFO, "connetion is closed");
         }
     }
 

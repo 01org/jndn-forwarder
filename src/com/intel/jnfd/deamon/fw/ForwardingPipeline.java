@@ -23,7 +23,6 @@ import com.intel.jnfd.deamon.table.pit.PitEntry;
 import com.intel.jnfd.deamon.table.pit.PitInRecord;
 import com.intel.jnfd.deamon.table.pit.PitOutRecord;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoice;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -70,6 +69,10 @@ public class ForwardingPipeline {
 
     public void addFace(Face face) {
         faceTable.add(face);
+    }
+    
+    public void removeFace(Face face, String reason) {
+        faceTable.remove(face, reason);
     }
 
     public void onInterest(Face face, Interest interest) {
@@ -359,7 +362,7 @@ public class ForwardingPipeline {
 // not provide similiar function. Need to find a solution
 // data.setIncomingFaceId();
 //        data.setIncomingFaceId();
-        logger.info("on incomingdata");
+        logger.info("on incomingdata " + data.getName().toUri());
 
         // /localhost scope control
         boolean isViolatingLocalhost = !inFace.isLocal()

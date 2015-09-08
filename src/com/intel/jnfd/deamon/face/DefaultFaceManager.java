@@ -247,7 +247,9 @@ public final class DefaultFaceManager implements FaceManager {
 
         @Override
         public void onCompleted(Object result) {
-
+            if (result instanceof Face) {
+                pipeline.removeFace((Face) result, null);
+            }
         }
 
     };
