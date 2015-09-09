@@ -37,126 +37,124 @@ import net.named_data.jndn.Name;
  */
 public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 
-    private final ScheduledExecutorService pool;
-    private final ForwardingPipeline pipeline;
-    private final FaceManager faceManager;
-    private static final Logger logger = Logger.getLogger(Forwarder.class.getName());
+	private final ScheduledExecutorService pool;
+	private final ForwardingPipeline pipeline;
+	private final FaceManager faceManager;
+	private static final Logger logger = Logger.getLogger(Forwarder.class.getName());
 
-    public Forwarder() {
+	public Forwarder() {
+		pool = Executors.newScheduledThreadPool(4);
+		pipeline = new ForwardingPipeline(pool);
+		faceManager = new DefaultFaceManager(pool, pipeline);
+	}
 
-        pool = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
-        pipeline = new ForwardingPipeline(pool);
+	/**
+	 * If new {@link ScheduledExecutorService}, {@link PendingInterestTable},
+	 * {@link FaceInformationBase} and {@link ContentStore} need to be tested,
+	 * use this constructor.
+	 *
+	 * @param pool
+	 * @param pit
+	 * @param fib
+	 * @param cs
+	 */
+	public Forwarder(ScheduledExecutorService pool, PendingInterestTable pit,
+			FaceInformationBase fib, ContentStore cs) {
+		this.pool = pool;
+		pipeline = new ForwardingPipeline(pool);
+		faceManager = new DefaultFaceManager(pool, pipeline);
+		pipeline.setPit(pit);
+		pipeline.setFib(fib);
+		pipeline.setCs(cs);
+	}
 
-        faceManager = new DefaultFaceManager(pool, pipeline);
-    }
+	/**
+	 * New {@link protocolFactory} can be dynamically registered using this
+	 * method.
+	 *
+	 * @param protocolFactory
+	 */
+	public void registerProtocol(ProtocolFactory protocolFactory) {
+		faceManager.registerProtocol(protocolFactory);
+	}
 
-    /**
-     * If new {@link ScheduledExecutorService}, {@link PendingInterestTable},
-     * {@link FaceInformationBase} and {@link ContentStore} need to be tested,
-     * use this constructor.
-     *
-     * @param pool
-     * @param pit
-     * @param fib
-     * @param cs
-     */
-    public Forwarder(ScheduledExecutorService pool, PendingInterestTable pit,
-            FaceInformationBase fib, ContentStore cs) {
-        this.pool = pool;
-        pipeline = new ForwardingPipeline(pool);
-        faceManager = new DefaultFaceManager(pool, pipeline);
-        pipeline.setPit(pit);
-        pipeline.setFib(fib);
-        pipeline.setCs(cs);
-    }
+	/**
+	 * New {@link Strategy} can be dynamically registered using this method.
+	 *
+	 * @param strategy
+	 */
+	public void installStrategies(Strategy strategy) {
+		pipeline.getStrategyChoice().install(strategy);
+	}
 
-    /**
-     * New {@link protocolFactory} can be dynamically registered using this
-     * method.
-     *
-     * @param protocolFactory
-     */
-    public void registerProtocol(ProtocolFactory protocolFactory) {
-        faceManager.registerProtocol(protocolFactory);
-    }
+	@Override
+	public void run() {
+		while (true) {
 
-    /**
-     * New {@link Strategy} can be dynamically registered using this method.
-     *
-     * @param strategy
-     */
-    public void installStrategies(Strategy strategy) {
-        pipeline.getStrategyChoice().install(strategy);
-    }
+		}
+	}
 
-    @Override
-    public void run() {
-        while (true) {
-
-        }
-    }
-
-    public void addNextHop(final Name prefix, FaceUri uri, final int cost,
-            final OnCompleted<FibEntry> onCompleted, OnFailed onFailed) {
+	public void addNextHop(final Name prefix, FaceUri uri, final int cost,
+			final OnCompleted<FibEntry> onCompleted, OnFailed onFailed) {
         // in the createFace method, the Face should be checked first, if exists,
-        // just use that one, if not, create a new one.
-        createFace(uri);
-    }
+		// just use that one, if not, create a new one.
+		createFace(uri);
+	}
 
-    public void removeNextHop(Name name, FaceUri uri) {
-        pipeline.getFib().remove(name);
-    }
+	public void removeNextHop(Name name, FaceUri uri) {
+		pipeline.getFib().remove(name);
+	}
 
-    public Collection<FibEntry> listNextHops() {
-        return pipeline.getFib().list();
-    }
+	public Collection<FibEntry> listNextHops() {
+		return pipeline.getFib().list();
+	}
 
-    /**
-     * set the Strategy used by a specific name prefix. Notice, the Strategy
-     * should be installed first.
-     *
-     * @param prefix
-     * @param strategy
-     */
-    public void setStrategy(Name prefix, Name strategy) {
-        pipeline.getStrategyChoice().insert(prefix, strategy);
-    }
+	/**
+	 * set the Strategy used by a specific name prefix. Notice, the Strategy
+	 * should be installed first.
+	 *
+	 * @param prefix
+	 * @param strategy
+	 */
+	public void setStrategy(Name prefix, Name strategy) {
+		pipeline.getStrategyChoice().insert(prefix, strategy);
+	}
 
-    public void unsetStrategy(Name prefix) {
-        pipeline.getStrategyChoice().erase(prefix);
-    }
+	public void unsetStrategy(Name prefix) {
+		pipeline.getStrategyChoice().erase(prefix);
+	}
 
-    public Collection<StrategyChoiceEntry> listStrategies() {
-        return pipeline.getStrategyChoice().list();
-    }
+	public Collection<StrategyChoiceEntry> listStrategies() {
+		return pipeline.getStrategyChoice().list();
+	}
 
-    public void createFace(FaceUri remoteUri) {
-        faceManager.createFaceAndConnect(remoteUri);
-    }
+	public void createFace(FaceUri remoteUri) {
+		faceManager.createFaceAndConnect(remoteUri);
+	}
 
-    public void destroyFace(Face face) {
-        faceManager.destroyFace(face);
-    }
+	public void destroyFace(Face face) {
+		faceManager.destroyFace(face);
+	}
 
-    public Collection<? extends Face> listFaces() {
-        return faceManager.listFaces();
-    }
+	public Collection<? extends Face> listFaces() {
+		return faceManager.listFaces();
+	}
 
-    @Override
-    public void onData(Data data, Face incomingFace) {
-        List<List<PitEntry>> matches = pipeline.getPit().findAllMatches(data);
-        for (List<PitEntry> entry : matches) {
-            for (PitEntry one : entry) {
+	@Override
+	public void onData(Data data, Face incomingFace) {
+		List<List<PitEntry>> matches = pipeline.getPit().findAllMatches(data);
+		for (List<PitEntry> entry : matches) {
+			for (PitEntry one : entry) {
 
-                // TODO: satisfy interests here
-            }
-        }
+				// TODO: satisfy interests here
+			}
+		}
 
-        pipeline.getCs().insert(data, matches.isEmpty());
-    }
+		pipeline.getCs().insert(data, matches.isEmpty());
+	}
 
-    @Override
-    public void onInterest(Interest interest, final Face face) {
+	@Override
+	public void onInterest(Interest interest, final Face face) {
 //		try {
 //			cs.find(interest, new SearchCsCallback() {
 //
@@ -190,5 +188,5 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 //			// TODO push exception up appropriately
 //			throw new RuntimeException(ex);
 //		}
-    }
+	}
 }
