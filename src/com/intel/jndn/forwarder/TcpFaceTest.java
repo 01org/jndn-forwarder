@@ -3,12 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.intel.jnfd.deamon.face.tcp;
+package com.intel.jndn.forwarder;
 
-import com.intel.jndn.forwarder.Forwarder;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import com.intel.jnfd.deamon.face.tcp.Producer;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,9 +13,7 @@ import net.named_data.jndn.Data;
 import net.named_data.jndn.Face;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
-import net.named_data.jndn.Name.Component;
 import net.named_data.jndn.OnData;
-import net.named_data.jndn.encoding.EncodingException;
 import net.named_data.jndn.security.KeyChain;
 import net.named_data.jndn.security.SecurityException;
 import net.named_data.jndn.security.identity.IdentityManager;
@@ -27,9 +22,6 @@ import net.named_data.jndn.security.identity.MemoryIdentityStorage;
 import net.named_data.jndn.security.identity.MemoryPrivateKeyStorage;
 import net.named_data.jndn.security.identity.PrivateKeyStorage;
 import net.named_data.jndn.security.policy.SelfVerifyPolicyManager;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  *
@@ -43,7 +35,6 @@ public class TcpFaceTest {
 	private Face consumer;
 	private Forwarder forwarder;
 
-	@Before
 	public void setUp() throws Exception {
 		forwarder = new Forwarder();
 		consumer = new Face();
@@ -54,7 +45,16 @@ public class TcpFaceTest {
 		Thread.sleep(500);
 	}
 
-	@Test
+	public static void main(String[] args) {
+		try {
+			TcpFaceTest test = new TcpFaceTest();
+			test.setUp();
+			test.testSendInterest();
+		} catch (Exception ex) {
+			Logger.getLogger(TcpFaceTest.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	}
+
 	public void testSendInterest() throws Exception {
 
 		producer.registerPrefix(PREFIX, new Producer(), null);
@@ -62,45 +62,37 @@ public class TcpFaceTest {
 		int waitCount = 10;
 		while (waitCount-- > 0) {
 			producer.processEvents();
-			Thread.sleep(50);
+			Thread.sleep(100);
 		}
 
-		long totalInterests = 1000;
+		long totalInterests = 1;
 		long interestCount = 0;
 		final AtomicLong dataCount = new AtomicLong(0);
-		final Set<Component> sent = new HashSet();
 		while (interestCount++ < totalInterests) {
 			Interest interest = new Interest(new Name(PREFIX).appendSegment(interestCount));
-			sent.add(new Name().appendSegment(interestCount).get(0));
 			System.out.println("Interest sent: " + interest.toUri());
 			consumer.expressInterest(interest, new OnData() {
 				@Override
 				public void onData(Interest interest, Data data) {
-
 					System.out.println("Data received: " + data.getName().toUri());
-					sent.remove(data.getName().get(-2));
 					dataCount.incrementAndGet();
-
 				}
 			});
 
 			consumer.processEvents();
+
 			producer.processEvents();
-			Thread.sleep(10);
+
+			Thread.sleep(20);
 		}
 
-		waitCount = 10;
-		while (waitCount-- > 0) {
+		Thread.sleep(100);
+
+		while (true) {
 			consumer.processEvents();
 			producer.processEvents();
-			Thread.sleep(100);
+			logger.info("Total datas received: " + dataCount.get());
 		}
-
-		logger.info("Datas received: " + dataCount.get());
-		logger.info("Missing interests: " + componentsToUri(sent));
-		assertEquals(totalInterests, dataCount.get());
-		forwarder.stop();
-
 	}
 
 	private void setupConsumer(final Face faceA) {
@@ -157,14 +149,5 @@ public class TcpFaceTest {
 		keyChain.getIdentityManager().setDefaultIdentity(name);
 
 		return keyChain;
-	}
-
-	private String componentsToUri(Set<Component> sent) {
-		StringBuilder sb = new StringBuilder("[");
-		for(Component c : sent){
-			sb.append(c.toEscapedString() + ", ");
-		}
-		sb.append("]");
-		return sb.toString();
 	}
 }

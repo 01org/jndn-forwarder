@@ -128,8 +128,15 @@ public class SortedSetCs implements ContentStore {
 	}
 
 	private CsEntry findLeftMost(Interest interest, Name first, Name last) {
-		ConcurrentNavigableMap<Name, CsEntry> subMap
-				= dataCache.subMap(first, true, last, false);
+		ConcurrentNavigableMap<Name, CsEntry> subMap = null;
+		try{
+			subMap = dataCache.subMap(first, true, last, false);
+		}
+		catch(Exception e){
+			System.out.println("Error: " + interest.toUri() + ", " + first.toUri() + ", " + last.toUri());
+			e.printStackTrace();
+		}
+		
 		if (subMap == null) {
 			return null;
 		}

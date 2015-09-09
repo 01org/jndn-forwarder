@@ -60,14 +60,14 @@ public class TcpFace extends AbstractFace {
 	public void sendInterest(Interest interest) {
 		logger.info("send interest: " + interest.toUri());
 		Blob blob = interest.wireEncode(wireFormat);
-		asynchronousSocketChannel.write(blob.buf(), null, null);
+		asynchronousSocketChannel.write(blob.buf(), blob.buf(), sendHandler);
 	}
 
 	@Override
 	public void sendData(Data data) {
 		logger.info("send data: " + data.getName().toUri());
 		Blob blob = data.wireEncode(wireFormat);
-		asynchronousSocketChannel.write(blob.buf(), null, null);
+		asynchronousSocketChannel.write(blob.buf(), blob.buf(), sendHandler);
 	}
 
 	@Override
@@ -80,7 +80,6 @@ public class TcpFace extends AbstractFace {
 	}
 
 	private class ReceiveAttachment {
-
 		public ByteBuffer byteBuffer = ByteBuffer.allocate(Common.MAX_NDN_PACKET_SIZE);
 	}
 
@@ -95,8 +94,8 @@ public class TcpFace extends AbstractFace {
 			if (result != -1) {
 				// continue reading
 				ReceiveAttachment newAttachment = new ReceiveAttachment();
-				newAttachment.byteBuffer.limit(newAttachment.byteBuffer.capacity());
-				newAttachment.byteBuffer.position(0);
+//				newAttachment.byteBuffer.limit(newAttachment.byteBuffer.capacity());
+//				newAttachment.byteBuffer.position(0);
 				asynchronousSocketChannel.read(newAttachment.byteBuffer, newAttachment, this);
 
 				// parse current
@@ -104,9 +103,12 @@ public class TcpFace extends AbstractFace {
 				try {
 					logger.info("decode packet");
 					elementReader.onReceivedData(attachment.byteBuffer);
-				} catch (EncodingException ex) {
+				} catch (Exception ex) {
 					logger.log(Level.WARNING, "Failed to decode bytes on face.", ex);
 				}
+			}
+			else{
+				logger.info("NO DATA RECEIVED...");
 			}
 		}
 
@@ -156,15 +158,19 @@ public class TcpFace extends AbstractFace {
 	 * This class is used to handle the send data. The Void is used to pass the
 	 * parameters.
 	 */
-	private class SendHandler implements CompletionHandler<Integer, Void> {
+	private class SendHandler implements CompletionHandler<Integer, ByteBuffer> {
 
 		@Override
-		public void completed(Integer result, Void attachment) {
+		public void completed(Integer result, ByteBuffer attachment) {
 			logger.info("bytes sent: " + result);
+			if(attachment.hasRemaining()){
+				logger.info("writing more bytes");
+				asynchronousSocketChannel.write(attachment, attachment, sendHandler);
+			}
 		}
 
 		@Override
-		public void failed(Throwable exc, Void attachment) {
+		public void failed(Throwable exc, ByteBuffer attachment) {
 			//TODO: add actions in the future;
 			logger.log(Level.INFO, "Failed to send bytes on face.");
 		}
@@ -179,5 +185,5 @@ public class TcpFace extends AbstractFace {
 	private final OnInterestReceived onInterestReceived;
 	private final OnDataReceived onDataReceived;
 	private final WireFormat wireFormat = new TlvWireFormat();
-	private final CompletionHandler<Integer, Void> sendHandler = new SendHandler();
+	private final CompletionHandler<Integer, ByteBuffer> sendHandler = new SendHandler();
 }

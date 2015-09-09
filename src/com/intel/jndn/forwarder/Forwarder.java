@@ -43,7 +43,7 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 	private static final Logger logger = Logger.getLogger(Forwarder.class.getName());
 
 	public Forwarder() {
-		pool = Executors.newScheduledThreadPool(4);
+		pool = Executors.newScheduledThreadPool(1);
 		pipeline = new ForwardingPipeline(pool);
 		faceManager = new DefaultFaceManager(pool, pipeline);
 	}
@@ -92,6 +92,10 @@ public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 		while (true) {
 
 		}
+	}
+	
+	public void stop(){
+		pool.shutdownNow();
 	}
 
 	public void addNextHop(final Name prefix, FaceUri uri, final int cost,
