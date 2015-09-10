@@ -85,7 +85,7 @@ public class TcpFaceTest {
 
 			consumer.processEvents();
 			producer.processEvents();
-//			Thread.sleep(5);
+//			Thread.sleep(50);
 		}
 
 		waitCount = 1000;

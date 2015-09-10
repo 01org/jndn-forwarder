@@ -50,9 +50,9 @@ public class TcpFace extends AbstractFace {
 
         ReceiveHandler receiveHandler = new ReceiveHandler();
 
-        inputBuffer.limit(inputBuffer.capacity());
-        inputBuffer.position(0);
-        this.asynchronousSocketChannel.read(inputBuffer, null, receiveHandler);
+        ReceiveAttachment newAttachment = new ReceiveAttachment();
+        receiveQueue.add(newAttachment);
+        this.asynchronousSocketChannel.read(newAttachment.inputBuffer, newAttachment, receiveHandler);
     }
 
     @Override
@@ -91,7 +91,27 @@ public class TcpFace extends AbstractFace {
      * Check the sendQueue and send data out.
      */
     protected synchronized void sendFromQueue() {
-        asynchronousSocketChannel.write(sendQueue.poll().buf(), null, sendHandler);
+        if (!sendQueue.isEmpty()) {
+            asynchronousSocketChannel.write(sendQueue.poll().buf(), null, sendHandler);
+        }
+    }
+
+    protected void receiveFromQueue() {
+        while (!receiveQueue.isEmpty()) {
+            logger.info("try to process the incoming queue");
+            ReceiveAttachment head = receiveQueue.peek();
+            if (head.haveReadFromChannle) {
+                receiveQueue.poll();
+                logger.info("decode packet");
+                try {
+                    elementReader.onReceivedData(head.inputBuffer);
+                } catch (EncodingException ex) {
+                    logger.log(Level.WARNING, "Failed to decode bytes on face.", ex);
+                }
+            } else {
+                return;
+            }
+        }
     }
 
     @Override
@@ -103,30 +123,28 @@ public class TcpFace extends AbstractFace {
         sendQueue.clear();
     }
 
+    private class ReceiveAttachment {
+
+        public ByteBuffer inputBuffer = ByteBuffer.allocate(Common.MAX_NDN_PACKET_SIZE);
+        public boolean haveReadFromChannle = false;
+    }
+
     /**
      * Receive data and split it into elements (e.g. Data, Interest) using the
      * ElementReader
      */
-    private class ReceiveHandler implements CompletionHandler<Integer, Void> {
+    private class ReceiveHandler implements CompletionHandler<Integer, ReceiveAttachment> {
 
         @Override
-        public void completed(Integer result, Void attachment) {
+        public void completed(Integer result, ReceiveAttachment attachment) {
             if (result != -1) {
-                // parse current
-                inputBuffer.flip();
-                try {
-                    logger.info("decode packet");
-                    synchronized (lock) {
-                        elementReader.onReceivedData(inputBuffer);
-                    }
-                } catch (Exception ex) {
-                    logger.log(Level.WARNING, "Failed to decode bytes on face.", ex);
-                }
-
-                // continue reading
-                inputBuffer.limit(inputBuffer.capacity());
-                inputBuffer.position(0);
-                asynchronousSocketChannel.read(inputBuffer, null, this);
+                logger.info("receive something");
+                attachment.inputBuffer.flip();
+                attachment.haveReadFromChannle = true;
+                receiveFromQueue();
+                ReceiveAttachment newAttachment = new ReceiveAttachment();
+                receiveQueue.add(newAttachment);
+                asynchronousSocketChannel.read(newAttachment.inputBuffer, newAttachment, this);
             } else {
                 // TODO: close this face
                 logger.info("NO DATA RECEIVED...");
@@ -134,7 +152,7 @@ public class TcpFace extends AbstractFace {
         }
 
         @Override
-        public void failed(Throwable exc, Void attachment) {
+        public void failed(Throwable exc, ReceiveAttachment attachment) {
             logger.log(Level.INFO, "Failed to receive bytes on face.");
         }
     }
@@ -204,12 +222,12 @@ public class TcpFace extends AbstractFace {
 
     private static final Logger logger = Logger.getLogger(TcpFace.class.getName());
     protected AsynchronousSocketChannel asynchronousSocketChannel;
-    private final ByteBuffer inputBuffer = ByteBuffer.allocate(Common.MAX_NDN_PACKET_SIZE);
+//    private final ByteBuffer inputBuffer = ByteBuffer.allocate(Common.MAX_NDN_PACKET_SIZE);
     private final Queue<Blob> sendQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<ReceiveAttachment> receiveQueue = new ConcurrentLinkedQueue<>();
     private final ElementReader elementReader;
     private final OnInterestReceived onInterestReceived;
     private final OnDataReceived onDataReceived;
     private final WireFormat wireFormat = new TlvWireFormat();
     private final CompletionHandler<Integer, Void> sendHandler = new SendHandler();
-    private final Object lock = new Object();
 }
