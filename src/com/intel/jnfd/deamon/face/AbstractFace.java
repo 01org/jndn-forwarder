@@ -107,7 +107,7 @@ public abstract class AbstractFace implements Face {
     
     @Override
     public String toString() {
-        return "localUri: " + localUri + ";" + "remoteUri: " + remoteUri;
+        return "faceId: " + faceId + "; localUri: " + localUri + "; remoteUri: " + remoteUri;
     }
     
     private FaceUri localUri;

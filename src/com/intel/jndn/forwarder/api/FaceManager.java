@@ -5,10 +5,6 @@
  */
 package com.intel.jndn.forwarder.api;
 
-import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
-import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
-import com.intel.jndn.forwarder.api.callbacks.OnFailed;
-import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.FaceUri;
 import java.util.Collection;
 

@@ -43,6 +43,7 @@ public class TcpChannel extends AbstractChannel {
             OnFailed onFaceCreationFailed,
             OnCompleted<Face> onFaceDestroyed,
             OnFailed onFaceDestructionFailed,
+            OnCompleted<Face> onFaceDestroyedByPeer,
             OnInterestReceived onInterestReceived,
             OnDataReceived onDataReceived) {
         addLocalUri(uri);
@@ -60,6 +61,7 @@ public class TcpChannel extends AbstractChannel {
         this.onFaceCreationFailed = onFaceCreationFailed;
         this.onFaceDestroyed = onFaceDestroyed;
         this.onFaceDestructionFailed = onFaceDestructionFailed;
+        this.onFaceDestroyedByPeer = onFaceDestroyedByPeer;
         this.onDataReceived = onDataReceived;
         this.onInterestReceived = onInterestReceived;
     }
@@ -285,6 +287,7 @@ public class TcpChannel extends AbstractChannel {
                     face = new TcpLocalFace(new FaceUri("tcp", localSocket),
                             new FaceUri("tcp", remoteSocket),
                             asynchronousSocketChannel, true, false,
+                            onFaceDestroyedByPeer,
                             onDataReceived, onInterestReceived);
                     onFaceCreated.onCompleted(face);
                 } catch (ParseFaceUriException ex) {
@@ -296,6 +299,7 @@ public class TcpChannel extends AbstractChannel {
                     face = new TcpFace(new FaceUri("tcp", localSocket),
                             new FaceUri("tcp", remoteSocket),
                             asynchronousSocketChannel, false, false,
+                            onFaceDestroyedByPeer,
                             onDataReceived, onInterestReceived);
                     onFaceCreated.onCompleted(face);
                 } catch (ParseFaceUriException ex) {
@@ -352,6 +356,7 @@ public class TcpChannel extends AbstractChannel {
     private final OnFailed onFaceCreationFailed;
     private final OnCompleted<Face> onFaceDestroyed;
     private final OnFailed onFaceDestructionFailed;
+    private final OnCompleted<Face> onFaceDestroyedByPeer;
     private final OnInterestReceived onInterestReceived;
     private final OnDataReceived onDataReceived;
 }

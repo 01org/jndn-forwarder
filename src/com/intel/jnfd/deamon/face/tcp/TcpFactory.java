@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,6 +41,7 @@ public final class TcpFactory implements ProtocolFactory {
             OnFailed onFaceCreationFailed,
             OnCompleted<Face> onFaceDestroyed,
             OnFailed onFaceDestructionFailed,
+            OnCompleted<Face> onFaceDestroyedByPeer,
             OnDataReceived onDataReceived,
             OnInterestReceived onInterestReceived) {
         this.onChannelCreated = onChannelCreated;
@@ -52,6 +52,7 @@ public final class TcpFactory implements ProtocolFactory {
         this.onFaceCreationFailed = onFaceCreationFailed;
         this.onFaceDestroyed = onFaceDestroyed;
         this.onFaceDestructionFailed = onFaceDestructionFailed;
+        this.onFaceDestroyedByPeer = onFaceDestroyedByPeer;
         this.onDataReceived = onDataReceived;
         this.onInterestReceived = onInterestReceived;
         try {
@@ -119,6 +120,7 @@ public final class TcpFactory implements ProtocolFactory {
                     onFaceCreationFailed,
                     onFaceDestroyed,
                     onFaceDestructionFailed,
+                    onFaceDestroyedByPeer,
                     onInterestReceived,
                     onDataReceived);
             channelMap.put(faceUri.getPort(), channel);
@@ -206,6 +208,7 @@ public final class TcpFactory implements ProtocolFactory {
 
     @Override
     public void destroyFace(Face face) {
+        logger.log(Level.INFO, "destroyFace: {0}", face);
         destroyFace(face.getLocalUri(), face.getRemoteUri());
     }
 
@@ -250,6 +253,7 @@ public final class TcpFactory implements ProtocolFactory {
     private final OnFailed onFaceCreationFailed;
     private final OnCompleted<Face> onFaceDestroyed;
     private final OnFailed onFaceDestructionFailed;
+    private final OnCompleted<Face> onFaceDestroyedByPeer;
     private final OnDataReceived onDataReceived;
     private final OnInterestReceived onInterestReceived;
 

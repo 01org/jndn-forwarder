@@ -46,6 +46,7 @@ public final class DefaultFaceManager implements FaceManager {
                 onFaceCreationFailed,
                 onFaceDestroyed,
                 onFaceDestructionFailed,
+                onFaceDestroyedByPeer,
                 onDataReceived,
                 onInterestReceived));
     }
@@ -150,6 +151,7 @@ public final class DefaultFaceManager implements FaceManager {
 
     @Override
     public void destroyFace(Face face) {
+        logger.log(Level.INFO, "destroyFace: {0}", face);
         ProtocolFactory protocol = protocols.get(face.getLocalUri().getScheme());
         if (protocol == null) {
             onFaceDestructionFailed.onFailed(new Exception("No such scheme found "
@@ -260,6 +262,14 @@ public final class DefaultFaceManager implements FaceManager {
 
         }
 
+    };
+    private final OnCompleted<Face> onFaceDestroyedByPeer = new OnCompleted() {
+        @Override
+        public void onCompleted(Object result) {
+            if (result instanceof Face) {
+                destroyFace((Face) result);
+            }
+        }
     };
     private final OnDataReceived onDataReceived = new OnDataReceived() {
 

@@ -5,6 +5,8 @@
  */
 package com.intel.jnfd.deamon.face.tcp;
 
+import com.intel.jndn.forwarder.api.Face;
+import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
 import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.AbstractFace;
@@ -38,12 +40,14 @@ public class TcpFace extends AbstractFace {
     public TcpFace(FaceUri localUri, FaceUri remoteUri,
             AsynchronousSocketChannel asynchronousSocketChannel,
             boolean isLocal, boolean isMultiAccess,
+            OnCompleted<Face> onFaceDestroyedByPeer,
             OnDataReceived onDataReceived,
             OnInterestReceived onInterestReceived) {
         super(localUri, remoteUri, isLocal, isMultiAccess);
         this.asynchronousSocketChannel = asynchronousSocketChannel;
 
         // callbacks
+        this.onFaceDestroyedByPeer = onFaceDestroyedByPeer;
         this.onInterestReceived = onInterestReceived;
         this.onDataReceived = onDataReceived;
         this.elementReader = new ElementReader(new Deserializer(onDataReceived, onInterestReceived));
@@ -121,6 +125,7 @@ public class TcpFace extends AbstractFace {
         }
         asynchronousSocketChannel.close();
         sendQueue.clear();
+        receiveQueue.clear();
     }
 
     private class ReceiveAttachment {
@@ -146,8 +151,8 @@ public class TcpFace extends AbstractFace {
                 receiveQueue.add(newAttachment);
                 asynchronousSocketChannel.read(newAttachment.inputBuffer, newAttachment, this);
             } else {
-                // TODO: close this face
                 logger.info("NO DATA RECEIVED...");
+                onFaceDestroyedByPeer.onCompleted((Face) TcpFace.this);
             }
         }
 
@@ -207,8 +212,8 @@ public class TcpFace extends AbstractFace {
                     sendFromQueue();
                 }
             } else {
-                // TODO: close this face
                 logger.info("NO DATA SENT...");
+                onFaceDestroyedByPeer.onCompleted((Face) this);
             }
         }
 
@@ -226,6 +231,7 @@ public class TcpFace extends AbstractFace {
     private final Queue<Blob> sendQueue = new ConcurrentLinkedQueue<>();
     private final Queue<ReceiveAttachment> receiveQueue = new ConcurrentLinkedQueue<>();
     private final ElementReader elementReader;
+    private final OnCompleted<Face> onFaceDestroyedByPeer;
     private final OnInterestReceived onInterestReceived;
     private final OnDataReceived onDataReceived;
     private final WireFormat wireFormat = new TlvWireFormat();

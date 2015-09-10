@@ -8,6 +8,8 @@ package com.intel.jnfd.deamon.fw;
 import com.intel.jndn.forwarder.api.Face;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -46,6 +48,7 @@ public class FaceTable {
     public void addImp(Face face, int faceId) {
         face.setFaceId(faceId);
         faces.put(faceId, face);
+        logger.log(Level.INFO, "Add face to FaceTable: {0}", face);
     }
 
     // add a special Face with a reserved FaceId
@@ -71,6 +74,7 @@ public class FaceTable {
     public void remove(Face face, String reason) {
         int faceId = face.getFaceId();
         faces.remove(faceId);
+        logger.log(Level.INFO, "Remove face from faceTable: {0}", face);
         face.setFaceId(INVALID_FACEID);
         
         forwarder.getFib().removeNextHopFromAllEntries(face);
@@ -79,4 +83,5 @@ public class FaceTable {
     private final ForwardingPipeline forwarder;
     private int lastFaceId;
     private final Map<Integer, Face> faces = new HashMap<>();
+    private static final Logger logger = Logger.getLogger(FaceTable.class.getName());
 }

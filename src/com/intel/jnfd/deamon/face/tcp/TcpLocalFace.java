@@ -5,6 +5,8 @@
  */
 package com.intel.jnfd.deamon.face.tcp;
 
+import com.intel.jndn.forwarder.api.Face;
+import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
 import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.FaceUri;
@@ -18,8 +20,10 @@ public class TcpLocalFace extends TcpFace {
 
     public TcpLocalFace(FaceUri localUri, FaceUri remoteUri,
             AsynchronousSocketChannel asynchronousSocketChannel, boolean isLocal,
-            boolean isMultiAccess, OnDataReceived onDataReceived, OnInterestReceived onInterestReceived) {
-        super(localUri, remoteUri, asynchronousSocketChannel, isLocal, isMultiAccess, onDataReceived, onInterestReceived);
+            boolean isMultiAccess, OnCompleted<Face> onFaceDestroyedByPeer, 
+            OnDataReceived onDataReceived, OnInterestReceived onInterestReceived) {
+        super(localUri, remoteUri, asynchronousSocketChannel, isLocal, isMultiAccess, 
+                onFaceDestroyedByPeer, onDataReceived, onInterestReceived);
     }
 
 }
