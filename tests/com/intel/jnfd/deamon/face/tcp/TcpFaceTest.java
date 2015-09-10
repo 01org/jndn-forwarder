@@ -6,7 +6,6 @@
 package com.intel.jnfd.deamon.face.tcp;
 
 import com.intel.jndn.forwarder.Forwarder;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -18,7 +17,6 @@ import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
 import net.named_data.jndn.Name.Component;
 import net.named_data.jndn.OnData;
-import net.named_data.jndn.encoding.EncodingException;
 import net.named_data.jndn.security.KeyChain;
 import net.named_data.jndn.security.SecurityException;
 import net.named_data.jndn.security.identity.IdentityManager;
@@ -71,6 +69,7 @@ public class TcpFaceTest {
 		final Set<Component> sent = new HashSet();
 		while (interestCount++ < totalInterests) {
 			Interest interest = new Interest(new Name(PREFIX).appendSegment(interestCount));
+                        interest.setInterestLifetimeMilliseconds(20000);
 			sent.add(new Name().appendSegment(interestCount).get(0));
 			System.out.println("Interest sent: " + interest.toUri());
 			consumer.expressInterest(interest, new OnData() {
@@ -86,18 +85,18 @@ public class TcpFaceTest {
 
 			consumer.processEvents();
 			producer.processEvents();
-			Thread.sleep(10);
+//			Thread.sleep(5);
 		}
 
-		waitCount = 10;
+		waitCount = 1000;
 		while (waitCount-- > 0) {
 			consumer.processEvents();
 			producer.processEvents();
-			Thread.sleep(100);
+			Thread.sleep(10);
 		}
 
-		logger.info("Datas received: " + dataCount.get());
-		logger.info("Missing interests: " + componentsToUri(sent));
+		logger.log(Level.INFO, "Datas received: {0}", dataCount.get());
+		logger.log(Level.INFO, "Missing interests: {0}", componentsToUri(sent));
 		assertEquals(totalInterests, dataCount.get());
 		forwarder.stop();
 

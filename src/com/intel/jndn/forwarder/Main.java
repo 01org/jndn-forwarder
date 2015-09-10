@@ -21,9 +21,9 @@ import net.named_data.jndn.encoding.EncodingException;
 public class Main {
 
 	public static void main(String[] args) throws IOException, EncodingException {
-		ScheduledExecutorService pool = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
-		List<ProtocolFactory> protocols = ImplementationLoader.load(ProtocolFactory.class);
-		List<Strategy> strategies = ImplementationLoader.load(Strategy.class);
+//		ScheduledExecutorService pool = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+//		List<ProtocolFactory> protocols = ImplementationLoader.load(ProtocolFactory.class);
+//		List<Strategy> strategies = ImplementationLoader.load(Strategy.class);
 		// TODO pass these in to the forwarder
 		
 		Forwarder forwarder = new Forwarder();

@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -239,7 +240,7 @@ public final class TcpFactory implements ProtocolFactory {
     public FaceUri[] defaultLocalUri() {
         return DEFAULT_URI;
     }
-
+    
     // All the callbacks
     private final OnCompleted<Channel> onChannelCreated;
     private final OnFailed onChannelCreationFailed;

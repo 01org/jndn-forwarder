@@ -337,7 +337,7 @@ public class TcpChannel extends AbstractChannel {
     public void disableV6() {
         this.enableV6 = false;
     }
-
+    
     private InetSocketAddress mAddr = null;
     private final Map<InetSocketAddress, TcpFace> faceMap = new HashMap<>();
     // server socket used for incoming connection

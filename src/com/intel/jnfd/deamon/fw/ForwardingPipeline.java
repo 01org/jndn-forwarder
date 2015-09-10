@@ -70,7 +70,7 @@ public class ForwardingPipeline {
     public void addFace(Face face) {
         faceTable.add(face);
     }
-    
+
     public void removeFace(Face face, String reason) {
         faceTable.remove(face, reason);
     }
@@ -194,7 +194,7 @@ public class ForwardingPipeline {
             setUnsatisfyTimer(pitEntry);
             // FIB lookup
             FibEntry fibEntry = fib.findLongestPrefixMatch(pitEntry.getName());
-            logger.info("find fib" + fibEntry.getNextHopList().get(0).getFace().toString());
+            logger.log(Level.INFO, "find fib{0}", fibEntry.getNextHopList().get(0).getFace().toString());
             // dispatch to strategy
             Strategy effectiveStrategy
                     = strategyChoice.findEffectiveStrategy(pitEntry.getName());
@@ -326,6 +326,7 @@ public class ForwardingPipeline {
      * @param pitEntry
      */
     private void onInterestUnsatisfied(PitEntry pitEntry) {
+        logger.log(Level.INFO, "onInterestUnsatisfied for Interest {0}", pitEntry.getName().toUri());
         Strategy effectiveStrategy
                 = strategyChoice.findEffectiveStrategy(pitEntry.getName());
         effectiveStrategy.beforeExpirePendingInterest(pitEntry);
@@ -343,6 +344,7 @@ public class ForwardingPipeline {
      */
     private void onInterestFinalize(PitEntry pitEntry, boolean isSatisfied,
             long dataFreshnessPeriod) {
+        logger.log(Level.INFO, "onInterestFinalize for Interest {0}", pitEntry.getName().toUri());
         // Dead Nonce List insert if necessary
         insertDeadNonceList(pitEntry, isSatisfied, dataFreshnessPeriod, null);
 
@@ -362,7 +364,7 @@ public class ForwardingPipeline {
 // not provide similiar function. Need to find a solution
 // data.setIncomingFaceId();
 //        data.setIncomingFaceId();
-        logger.info("on incomingdata " + data.getName().toUri());
+        logger.log(Level.INFO, "on incomingdata {0}", data.getName().toUri());
 
         // /localhost scope control
         boolean isViolatingLocalhost = !inFace.isLocal()
@@ -379,20 +381,28 @@ public class ForwardingPipeline {
             onDataUnsolicited(inFace, data);
             return;
         }
-
+        logger.log(Level.INFO, "{0} PIT entry list(s) found for {1}",
+                new Object[]{pitMatches.size(), data.getName().toUri()});
         // CS insert
         cs.insert(data, false);
 
+        logger.log(Level.INFO, "Data inserting to CS succeed for {0}", data.getName().toUri());
         Set<Face> pendingDownstreams = new HashSet<>();
         // foreach PitEntry
         for (List<PitEntry> oneList : pitMatches) {
+            logger.log(Level.INFO, "{0} Pit entry(ies) found in the list for {1}",
+                    new Object[]{oneList.size(), data.getName().toUri()});
             for (PitEntry onePitEntry : oneList) {
                 // cancel unsatisfy & straggler timer
                 cancelUnsatisfyAndStragglerTimer(onePitEntry);
 
                 // remember pending downstreams
                 List<PitInRecord> inRecords = onePitEntry.getInRecords();
+                logger.log(Level.INFO, "{0} Pit Inrecord(s) found in the list for {1}",
+                        new Object[]{inRecords.size(), data.getName().toUri()});
                 for (PitInRecord oneInRecord : inRecords) {
+                    logger.log(Level.INFO, "The remaining lifetime for the inRecord is {0}", 
+                            (oneInRecord.getExpiry() - System.currentTimeMillis()));
                     if (oneInRecord.getExpiry() > System.currentTimeMillis()) {
                         pendingDownstreams.add(oneInRecord.getFace());
                     }
@@ -418,8 +428,12 @@ public class ForwardingPipeline {
             }
         }
 
+        logger.log(Level.INFO, "Find {0} downstream(s) faces for {1}",
+                new Object[]{pendingDownstreams.size(), data.getName().toUri()});
         // foreach pending downstream
         for (Face one : pendingDownstreams) {
+            logger.log(Level.INFO, "downstream faces for {0}is{1}",
+                    new Object[]{data.getName().toUri(), one.toString()});
             if (inFace.equals(one)) {
                 continue;
             }
@@ -435,6 +449,7 @@ public class ForwardingPipeline {
      * @param data
      */
     private void onDataUnsolicited(Face inFace, Data data) {
+        logger.info("onDataUnsolicited" + data.getName().toUri());
         // accept to cache?
         boolean acceptToCache = inFace.isLocal();
         if (acceptToCache) {
@@ -450,6 +465,7 @@ public class ForwardingPipeline {
      * @param outFace
      */
     private void onOutgoingData(Data data, Face outFace) {
+        logger.log(Level.INFO, "onOutgoingData {0}", data.getName().toUri());
         if (outFace.getFaceId() == FaceTable.INVALID_FACEID) {
             return;
         }
@@ -466,6 +482,7 @@ public class ForwardingPipeline {
     }
 
     private void setUnsatisfyTimer(final PitEntry pitEntry) {
+        logger.log(Level.INFO, "setUnsatisfyTimer is called for {0}", pitEntry.getName().toUri());
         List<PitInRecord> inRecords = pitEntry.getInRecords();
         long lastExpiry = 0;
         for (PitInRecord one : inRecords) {
@@ -477,6 +494,7 @@ public class ForwardingPipeline {
         if (lastExpiryFromNow < 0) {
             // TODO: this message is copied from c++ code
             // all InRecords are already expired; will this happen?
+            onInterestUnsatisfied(pitEntry);
         }
 
         if (pitEntry.unsatisfyTimer != null) {

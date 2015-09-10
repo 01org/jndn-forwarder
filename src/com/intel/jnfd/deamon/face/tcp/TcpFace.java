@@ -35,155 +35,181 @@ import net.named_data.jndn.util.Common;
  */
 public class TcpFace extends AbstractFace {
 
-	public TcpFace(FaceUri localUri, FaceUri remoteUri,
-			AsynchronousSocketChannel asynchronousSocketChannel,
-			boolean isLocal, boolean isMultiAccess,
-			OnDataReceived onDataReceived,
-			OnInterestReceived onInterestReceived) {
-		super(localUri, remoteUri, isLocal, isMultiAccess);
-		this.asynchronousSocketChannel = asynchronousSocketChannel;
+    public TcpFace(FaceUri localUri, FaceUri remoteUri,
+            AsynchronousSocketChannel asynchronousSocketChannel,
+            boolean isLocal, boolean isMultiAccess,
+            OnDataReceived onDataReceived,
+            OnInterestReceived onInterestReceived) {
+        super(localUri, remoteUri, isLocal, isMultiAccess);
+        this.asynchronousSocketChannel = asynchronousSocketChannel;
 
-		// callbacks
-		this.onInterestReceived = onInterestReceived;
-		this.onDataReceived = onDataReceived;
-		this.elementReader = new ElementReader(new Deserializer(onDataReceived, onInterestReceived));
+        // callbacks
+        this.onInterestReceived = onInterestReceived;
+        this.onDataReceived = onDataReceived;
+        this.elementReader = new ElementReader(new Deserializer(onDataReceived, onInterestReceived));
 
-		ReceiveHandler receiveHandler = new ReceiveHandler();
+        ReceiveHandler receiveHandler = new ReceiveHandler();
 
-		ReceiveAttachment attachment = new ReceiveAttachment();
-		attachment.byteBuffer.limit(attachment.byteBuffer.capacity());
-		attachment.byteBuffer.position(0);
-		this.asynchronousSocketChannel.read(attachment.byteBuffer, attachment, receiveHandler);
-	}
+        inputBuffer.limit(inputBuffer.capacity());
+        inputBuffer.position(0);
+        this.asynchronousSocketChannel.read(inputBuffer, null, receiveHandler);
+    }
 
-	@Override
-	public void sendInterest(Interest interest) {
-		logger.info("send interest: " + interest.toUri());
-		Blob blob = interest.wireEncode(wireFormat);
-		asynchronousSocketChannel.write(blob.buf(), blob.buf(), sendHandler);
-	}
+    @Override
+    public void sendInterest(Interest interest) {
+        boolean wasQueueEmpty = sendQueue.isEmpty();
+        sendQueue.add(interest.wireEncode(wireFormat));
+        if (wasQueueEmpty) {
+            sendFromQueue();
+        }
+    }
 
-	@Override
-	public void sendData(Data data) {
-		logger.info("send data: " + data.getName().toUri());
-		Blob blob = data.wireEncode(wireFormat);
-		asynchronousSocketChannel.write(blob.buf(), blob.buf(), sendHandler);
-	}
+    /**
+     * This method is created for test purpose. It should not be invoked by the
+     * formal method.
+     *
+     * @param str
+     */
+    public void send(String str) {
+        boolean wasQueueEmpty = sendQueue.isEmpty();
+        sendQueue.add(new Blob(str));
+        if (wasQueueEmpty) {
+            sendFromQueue();
+        }
+    }
 
-	@Override
-	public void close() throws IOException {
-		if (!asynchronousSocketChannel.isOpen()) {
-			return;
-		}
-		asynchronousSocketChannel.close();
-		sendQueue.clear();
-	}
+    @Override
+    public void sendData(Data data) {
+        boolean wasQueueEmpty = sendQueue.isEmpty();
+        sendQueue.add(data.wireEncode(wireFormat));
+        if (wasQueueEmpty) {
+            sendFromQueue();
+        }
+    }
 
-	private class ReceiveAttachment {
-		public ByteBuffer byteBuffer = ByteBuffer.allocate(Common.MAX_NDN_PACKET_SIZE);
-	}
+    /**
+     * Check the sendQueue and send data out.
+     */
+    protected synchronized void sendFromQueue() {
+        asynchronousSocketChannel.write(sendQueue.poll().buf(), null, sendHandler);
+    }
 
-	/**
-	 * Receive data and split it into elements (e.g. Data, Interest) using the
-	 * ElementReader
-	 */
-	private class ReceiveHandler implements CompletionHandler<Integer, ReceiveAttachment> {
+    @Override
+    public void close() throws IOException {
+        if (!asynchronousSocketChannel.isOpen()) {
+            return;
+        }
+        asynchronousSocketChannel.close();
+        sendQueue.clear();
+    }
 
-		@Override
-		public void completed(Integer result, ReceiveAttachment attachment) {
-			if (result != -1) {
-				// continue reading
-				ReceiveAttachment newAttachment = new ReceiveAttachment();
-//				newAttachment.byteBuffer.limit(newAttachment.byteBuffer.capacity());
-//				newAttachment.byteBuffer.position(0);
-				asynchronousSocketChannel.read(newAttachment.byteBuffer, newAttachment, this);
+    /**
+     * Receive data and split it into elements (e.g. Data, Interest) using the
+     * ElementReader
+     */
+    private class ReceiveHandler implements CompletionHandler<Integer, Void> {
 
-				// parse current
-				attachment.byteBuffer.flip();
-				try {
-					logger.info("decode packet");
-					elementReader.onReceivedData(attachment.byteBuffer);
-				} catch (Exception ex) {
-					logger.log(Level.WARNING, "Failed to decode bytes on face.", ex);
-				}
-			}
-			else{
-				logger.info("NO DATA RECEIVED...");
-			}
-		}
+        @Override
+        public void completed(Integer result, Void attachment) {
+            if (result != -1) {
+                // parse current
+                inputBuffer.flip();
+                try {
+                    logger.info("decode packet");
+                    synchronized (lock) {
+                        elementReader.onReceivedData(inputBuffer);
+                    }
+                } catch (Exception ex) {
+                    logger.log(Level.WARNING, "Failed to decode bytes on face.", ex);
+                }
 
-		@Override
-		public void failed(Throwable exc, ReceiveAttachment attachment) {
-			logger.log(Level.INFO, "Failed to receive bytes on face.");
-		}
-	}
+                // continue reading
+                inputBuffer.limit(inputBuffer.capacity());
+                inputBuffer.position(0);
+                asynchronousSocketChannel.read(inputBuffer, null, this);
+            } else {
+                // TODO: close this face
+                logger.info("NO DATA RECEIVED...");
+            }
+        }
 
-	/**
-	 * Parse bytes into Interest and Data packets
-	 */
-	private class Deserializer implements ElementListener {
+        @Override
+        public void failed(Throwable exc, Void attachment) {
+            logger.log(Level.INFO, "Failed to receive bytes on face.");
+        }
+    }
 
-		private final OnDataReceived onDataReceived;
-		private final OnInterestReceived onInterestReceived;
+    /**
+     * Parse bytes into Interest and Data packets
+     */
+    private class Deserializer implements ElementListener {
 
-		public Deserializer(OnDataReceived onDataReceived, OnInterestReceived onInterestReceived) {
-			this.onDataReceived = onDataReceived;
-			this.onInterestReceived = onInterestReceived;
-		}
+        private final OnDataReceived onDataReceived;
+        private final OnInterestReceived onInterestReceived;
 
-		@Override
-		public final void onReceivedElement(ByteBuffer element) throws EncodingException {
-			logger.info("onReceivedElement is called");
-			if (element.get(0) == Tlv.Interest || element.get(0) == Tlv.Data) {
-				logger.info("receive Data or Interest packet");
-				TlvDecoder decoder = new TlvDecoder(element);
-				if (decoder.peekType(Tlv.Interest, element.remaining())) {
-					logger.info("receive Interest packet");
-					Interest interest = new Interest();
-					interest.wireDecode(element, TlvWireFormat.get());
-					onInterestReceived.onInterest(interest, TcpFace.this);
+        public Deserializer(OnDataReceived onDataReceived, OnInterestReceived onInterestReceived) {
+            this.onDataReceived = onDataReceived;
+            this.onInterestReceived = onInterestReceived;
+        }
 
-				} else if (decoder.peekType(Tlv.Data, element.remaining())) {
-					logger.info("receive Data packet");
-					Data data = new Data();
-					data.wireDecode(element, TlvWireFormat.get());
-					onDataReceived.onData(data, TcpFace.this);
-				}
-			}
-		}
+        @Override
+        public final void onReceivedElement(ByteBuffer element) throws EncodingException {
+            logger.info("onReceivedElement is called");
+            if (element.get(0) == Tlv.Interest || element.get(0) == Tlv.Data) {
+                logger.info("receive Data or Interest packet");
+                TlvDecoder decoder = new TlvDecoder(element);
+                if (decoder.peekType(Tlv.Interest, element.remaining())) {
+                    logger.info("receive Interest packet");
+                    Interest interest = new Interest();
+                    interest.wireDecode(element, TlvWireFormat.get());
+                    onInterestReceived.onInterest(interest, TcpFace.this);
 
-	}
+                } else if (decoder.peekType(Tlv.Data, element.remaining())) {
+                    logger.info("receive Data packet");
+                    Data data = new Data();
+                    data.wireDecode(element, TlvWireFormat.get());
+                    onDataReceived.onData(data, TcpFace.this);
+                }
+            }
+        }
 
-	/**
-	 * This class is used to handle the send data. The Void is used to pass the
-	 * parameters.
-	 */
-	private class SendHandler implements CompletionHandler<Integer, ByteBuffer> {
+    }
 
-		@Override
-		public void completed(Integer result, ByteBuffer attachment) {
-			logger.info("bytes sent: " + result);
-			if(attachment.hasRemaining()){
-				logger.info("writing more bytes");
-				asynchronousSocketChannel.write(attachment, attachment, sendHandler);
-			}
-		}
+    /**
+     * This class is used to handle the send data. The Void is used to pass the
+     * parameters.
+     */
+    private class SendHandler implements CompletionHandler<Integer, Void> {
 
-		@Override
-		public void failed(Throwable exc, ByteBuffer attachment) {
-			//TODO: add actions in the future;
-			logger.log(Level.INFO, "Failed to send bytes on face.");
-		}
+        @Override
+        public void completed(Integer result, Void attachment) {
+            if (result != -1) {
+                logger.log(Level.INFO, "bytes sent: {0}", result);
+                if (!sendQueue.isEmpty()) {
+                    sendFromQueue();
+                }
+            } else {
+                // TODO: close this face
+                logger.info("NO DATA SENT...");
+            }
+        }
 
-	}
+        @Override
+        public void failed(Throwable exc, Void attachment) {
+            //TODO: add actions in the future;
+            logger.log(Level.INFO, "Failed to send bytes on face.");
+        }
 
-	private static final Logger logger = Logger.getLogger(TcpFace.class.getName());
-	protected AsynchronousSocketChannel asynchronousSocketChannel;
-//    private final ByteBuffer inputBuffer = ByteBuffer.allocate(Common.MAX_NDN_PACKET_SIZE);
-	private final Queue<Blob> sendQueue = new ConcurrentLinkedQueue<>();
-	private final ElementReader elementReader;
-	private final OnInterestReceived onInterestReceived;
-	private final OnDataReceived onDataReceived;
-	private final WireFormat wireFormat = new TlvWireFormat();
-	private final CompletionHandler<Integer, ByteBuffer> sendHandler = new SendHandler();
+    }
+
+    private static final Logger logger = Logger.getLogger(TcpFace.class.getName());
+    protected AsynchronousSocketChannel asynchronousSocketChannel;
+    private final ByteBuffer inputBuffer = ByteBuffer.allocate(Common.MAX_NDN_PACKET_SIZE);
+    private final Queue<Blob> sendQueue = new ConcurrentLinkedQueue<>();
+    private final ElementReader elementReader;
+    private final OnInterestReceived onInterestReceived;
+    private final OnDataReceived onDataReceived;
+    private final WireFormat wireFormat = new TlvWireFormat();
+    private final CompletionHandler<Integer, Void> sendHandler = new SendHandler();
+    private final Object lock = new Object();
 }
