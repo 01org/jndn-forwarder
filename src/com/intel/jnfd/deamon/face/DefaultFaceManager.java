@@ -15,6 +15,7 @@ import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.tcp.TcpFactory;
 import com.intel.jnfd.deamon.fw.ForwardingPipeline;
+import com.intel.jnfd.util.NfdCommon;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -49,6 +50,7 @@ public final class DefaultFaceManager implements FaceManager {
                 onFaceDestroyedByPeer,
                 onDataReceived,
                 onInterestReceived));
+        logger.setLevel(NfdCommon.LOG_LEVEL);
     }
 
     public DefaultFaceManager(ForwardingPipeline pipeline) {

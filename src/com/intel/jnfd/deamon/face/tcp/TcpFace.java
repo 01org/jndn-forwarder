@@ -11,6 +11,7 @@ import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.AbstractFace;
 import com.intel.jnfd.deamon.face.FaceUri;
+import com.intel.jnfd.util.NfdCommon;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -57,6 +58,7 @@ public class TcpFace extends AbstractFace {
         ReceiveAttachment newAttachment = new ReceiveAttachment();
         receiveQueue.add(newAttachment);
         this.asynchronousSocketChannel.read(newAttachment.inputBuffer, newAttachment, receiveHandler);
+        logger.setLevel(NfdCommon.LOG_LEVEL);
     }
 
     @Override
@@ -158,7 +160,7 @@ public class TcpFace extends AbstractFace {
 
         @Override
         public void failed(Throwable exc, ReceiveAttachment attachment) {
-            logger.log(Level.INFO, "Failed to receive bytes on face.");
+            logger.log(Level.WARNING, "Failed to receive bytes on face.");
         }
     }
 
@@ -220,7 +222,7 @@ public class TcpFace extends AbstractFace {
         @Override
         public void failed(Throwable exc, Void attachment) {
             //TODO: add actions in the future;
-            logger.log(Level.INFO, "Failed to send bytes on face.");
+            logger.log(Level.WARNING, "Failed to send bytes on face.");
         }
 
     }

@@ -6,6 +6,7 @@
 package com.intel.jnfd.deamon.fw;
 
 import com.intel.jndn.forwarder.api.Face;
+import com.intel.jnfd.util.NfdCommon;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -31,6 +32,7 @@ public class FaceTable {
     public FaceTable(ForwardingPipeline forwarder) {
         this.forwarder = forwarder;
         lastFaceId = FACEID_RESERVED_MAX;
+        logger.setLevel(NfdCommon.LOG_LEVEL);
     }
 
     //TODO: question, where does the initial faceId come from?

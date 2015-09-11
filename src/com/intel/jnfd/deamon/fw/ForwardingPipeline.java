@@ -23,6 +23,7 @@ import com.intel.jnfd.deamon.table.pit.PitEntry;
 import com.intel.jnfd.deamon.table.pit.PitInRecord;
 import com.intel.jnfd.deamon.table.pit.PitOutRecord;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoice;
+import com.intel.jnfd.util.NfdCommon;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -57,6 +58,7 @@ public class ForwardingPipeline {
         // install more strategies into strategyChoice here
         deadNonceList = new DeadNonceNaive(scheduler);
         prefixRegistration = new RegisterPrefixCommand();
+        logger.setLevel(NfdCommon.LOG_LEVEL);
     }
 
     public FaceTable getFaceTable() {
