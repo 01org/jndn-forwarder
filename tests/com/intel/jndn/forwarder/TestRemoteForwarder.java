@@ -64,7 +64,7 @@ public class TestRemoteForwarder {
         producer = new Face("ndn-lab2.jf.intel.com");
         setupProducer(producer);
 
-        Thread.sleep(500);
+        Thread.sleep(2000);
     }
 
     @Test

@@ -432,7 +432,7 @@ public class ForwardingPipeline {
                 new Object[]{pendingDownstreams.size(), data.getName().toUri()});
         // foreach pending downstream
         for (Face one : pendingDownstreams) {
-            logger.log(Level.INFO, "downstream faces for {0}is{1}",
+            logger.log(Level.INFO, "downstream faces for {0} is {1}",
                     new Object[]{data.getName().toUri(), one.toString()});
             if (inFace.equals(one)) {
                 continue;
@@ -449,7 +449,7 @@ public class ForwardingPipeline {
      * @param data
      */
     private void onDataUnsolicited(Face inFace, Data data) {
-        logger.info("onDataUnsolicited" + data.getName().toUri());
+        logger.log(Level.INFO, "onDataUnsolicited{0}", data.getName().toUri());
         // accept to cache?
         boolean acceptToCache = inFace.isLocal();
         if (acceptToCache) {

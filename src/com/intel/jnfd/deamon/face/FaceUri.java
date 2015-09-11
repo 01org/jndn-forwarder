@@ -182,7 +182,7 @@ public class FaceUri {
 
     @Override
     public String toString() {
-        return String.format("%s://%s:%s", scheme, inet.getCanonicalHostName(), port);
+        return String.format("%s://%s:%s", scheme, inet.getHostAddress(), port);
     }
 
     private String scheme;

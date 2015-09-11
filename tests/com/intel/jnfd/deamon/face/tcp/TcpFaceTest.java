@@ -49,7 +49,7 @@ public class TcpFaceTest {
 		producer = new Face();
 		setupProducer(producer);
 
-		Thread.sleep(500);
+		Thread.sleep(2000);
 	}
 
 	@Test
