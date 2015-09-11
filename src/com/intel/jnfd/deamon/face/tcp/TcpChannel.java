@@ -70,11 +70,17 @@ public class TcpChannel extends AbstractChannel {
         return faceMap.size();
     }
 
-    public void connect(FaceUri faceUri) throws IOException {
-        connect(faceUri, TimeUnit.SECONDS.toSeconds(4));
+    void connect(FaceUri remoteFaceUri, OnCompleted<Face> onFaceCreated) 
+            throws IOException{
+        connect(remoteFaceUri, TimeUnit.SECONDS.toSeconds(4), onFaceCreated);
     }
 
-    public void connect(FaceUri faceUri, long timeout) throws IOException {
+    public void connect(FaceUri faceUri) throws IOException {
+        connect(faceUri, TimeUnit.SECONDS.toSeconds(4), onFaceCreated);
+    }
+
+    public void connect(FaceUri faceUri, long timeout, OnCompleted<Face> onFaceCreated) 
+            throws IOException {
         InetSocketAddress remoteAddr
                 = new InetSocketAddress(faceUri.getInet(), faceUri.getPort());
         Face face = faceMap.get(remoteAddr);
@@ -86,6 +92,7 @@ public class TcpChannel extends AbstractChannel {
         AsynchronousSocketChannel asynchronousSocket
                 = AsynchronousSocketChannel.open(asynchronousChannelGroup);
         ConnectAttachment connectAttachment = new ConnectAttachment();
+        connectAttachment.onFaceCreated = onFaceCreated;
         connectAttachment.asynchronousSocketChannel = asynchronousSocket;
         asynchronousSocket.connect(remoteAddr, connectAttachment, new ConnectHandler());
     }
@@ -228,7 +235,7 @@ public class TcpChannel extends AbstractChannel {
             asynchronousServerSocket.accept(attachment, this);
             try {
                 // handle this connection
-                createFace(result);
+                createFace(result, onFaceCreated);
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, null, ex);
                 onFaceCreationFailed.onFailed(ex);
@@ -244,7 +251,7 @@ public class TcpChannel extends AbstractChannel {
     }
 
     private class ConnectAttachment {
-
+        public OnCompleted<Face> onFaceCreated;
         public AsynchronousSocketChannel asynchronousSocketChannel;
     }
 
@@ -253,7 +260,7 @@ public class TcpChannel extends AbstractChannel {
         @Override
         public void completed(Void result, ConnectAttachment attachment) {
             try {
-                createFace(attachment.asynchronousSocketChannel);
+                createFace(attachment.asynchronousSocketChannel, attachment.onFaceCreated);
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, null, ex);
                 onFaceCreationFailed.onFailed(ex);
@@ -273,7 +280,8 @@ public class TcpChannel extends AbstractChannel {
      * @param asynchronousSocketChannel
      * @throws IOException
      */
-    private void createFace(AsynchronousSocketChannel asynchronousSocketChannel)
+    private void createFace(AsynchronousSocketChannel asynchronousSocketChannel,
+            OnCompleted<Face> onFaceCreated)
             throws IOException {
         InetSocketAddress remoteSocket
                 = (InetSocketAddress) (asynchronousSocketChannel.getRemoteAddress());
@@ -341,7 +349,7 @@ public class TcpChannel extends AbstractChannel {
     public void disableV6() {
         this.enableV6 = false;
     }
-    
+
     private InetSocketAddress mAddr = null;
     private final Map<InetSocketAddress, TcpFace> faceMap = new HashMap<>();
     // server socket used for incoming connection

@@ -137,17 +137,28 @@ public final class DefaultFaceManager implements FaceManager {
         }
         protocol.createFace(remoteUri);
     }
-
+    
     @Override
-    public void createFaceAndConnect(FaceUri localUri, FaceUri remoteUri) {
-        ProtocolFactory protocol = protocols.get(localUri.getScheme());
+    public void createFaceAndConnect(FaceUri remoteUri, OnCompleted<Face> onFaceCreated) {
+        ProtocolFactory protocol = protocols.get(remoteUri.getScheme());
         if (protocol == null) {
             onFaceCreationFailed.onFailed(new Exception("No such scheme found"
-                    + localUri.getScheme()));
+                    + remoteUri.getScheme()));
             return;
         }
-        protocol.createFace(localUri, remoteUri, true);
+        protocol.createFace(remoteUri, onFaceCreated);
     }
+
+//    @Override
+//    public void createFaceAndConnect(FaceUri localUri, FaceUri remoteUri) {
+//        ProtocolFactory protocol = protocols.get(localUri.getScheme());
+//        if (protocol == null) {
+//            onFaceCreationFailed.onFailed(new Exception("No such scheme found"
+//                    + localUri.getScheme()));
+//            return;
+//        }
+//        protocol.createFace(localUri, remoteUri, true);
+//    }
 
     @Override
     public void destroyFace(Face face) {

@@ -19,6 +19,7 @@ import com.intel.jndn.forwarder.api.callbacks.OnFailed;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
 import com.intel.jnfd.deamon.face.DefaultFaceManager;
 import com.intel.jnfd.deamon.fw.ForwardingPipeline;
+import com.intel.jnfd.deamon.table.Pair;
 import com.intel.jnfd.deamon.table.fib.FibEntry;
 import com.intel.jnfd.deamon.table.pit.PitEntry;
 import com.intel.jnfd.deamon.table.strategy.StrategyChoiceEntry;
@@ -37,160 +38,150 @@ import net.named_data.jndn.Name;
  */
 public class Forwarder implements Runnable, OnDataReceived, OnInterestReceived {
 
-	private final ScheduledExecutorService pool;
-	private final ForwardingPipeline pipeline;
-	private final FaceManager faceManager;
-	private static final Logger logger = Logger.getLogger(Forwarder.class.getName());
+    private final ScheduledExecutorService pool;
+    private final ForwardingPipeline pipeline;
+    private final FaceManager faceManager;
+    private static final Logger logger = Logger.getLogger(Forwarder.class.getName());
 
-	public Forwarder() {
-		pool = Executors.newScheduledThreadPool(4);
-		pipeline = new ForwardingPipeline(pool);
-		faceManager = new DefaultFaceManager(pool, pipeline);
-	}
+    public Forwarder() {
+        pool = Executors.newScheduledThreadPool(4);
+        pipeline = new ForwardingPipeline(pool);
+        faceManager = new DefaultFaceManager(pool, pipeline);
+    }
 
-	/**
-	 * If new {@link ScheduledExecutorService}, {@link PendingInterestTable},
-	 * {@link FaceInformationBase} and {@link ContentStore} need to be tested,
-	 * use this constructor.
-	 *
-	 * @param pool
-	 * @param pit
-	 * @param fib
-	 * @param cs
-	 */
-	public Forwarder(ScheduledExecutorService pool, PendingInterestTable pit,
-			FaceInformationBase fib, ContentStore cs) {
-		this.pool = pool;
-		pipeline = new ForwardingPipeline(pool);
-		faceManager = new DefaultFaceManager(pool, pipeline);
-		pipeline.setPit(pit);
-		pipeline.setFib(fib);
-		pipeline.setCs(cs);
-	}
+    /**
+     * If new {@link ScheduledExecutorService}, {@link PendingInterestTable},
+     * {@link FaceInformationBase} and {@link ContentStore} need to be tested,
+     * use this constructor.
+     *
+     * @param pool
+     * @param pit
+     * @param fib
+     * @param cs
+     */
+    public Forwarder(ScheduledExecutorService pool, PendingInterestTable pit,
+            FaceInformationBase fib, ContentStore cs) {
+        this.pool = pool;
+        pipeline = new ForwardingPipeline(pool);
+        faceManager = new DefaultFaceManager(pool, pipeline);
+        pipeline.setPit(pit);
+        pipeline.setFib(fib);
+        pipeline.setCs(cs);
+    }
 
-	/**
-	 * New {@link protocolFactory} can be dynamically registered using this
-	 * method.
-	 *
-	 * @param protocolFactory
-	 */
-	public void registerProtocol(ProtocolFactory protocolFactory) {
-		faceManager.registerProtocol(protocolFactory);
-	}
+    /**
+     * New {@link protocolFactory} can be dynamically registered using this
+     * method.
+     *
+     * @param protocolFactory
+     */
+    public void registerProtocol(ProtocolFactory protocolFactory) {
+        faceManager.registerProtocol(protocolFactory);
+    }
 
-	/**
-	 * New {@link Strategy} can be dynamically registered using this method.
-	 *
-	 * @param strategy
-	 */
-	public void installStrategies(Strategy strategy) {
-		pipeline.getStrategyChoice().install(strategy);
-	}
+    /**
+     * New {@link Strategy} can be dynamically registered using this method.
+     *
+     * @param strategy
+     */
+    public void installStrategies(Strategy strategy) {
+        pipeline.getStrategyChoice().install(strategy);
+    }
 
-	@Override
-	public void run() {
-		while (true) {
+    @Override
+    public void run() {
+        while (true) {
 
-		}
-	}
-	
-	public void stop(){
-		pool.shutdownNow();
-	}
+        }
+    }
 
-	public void addNextHop(final Name prefix, FaceUri uri, final int cost,
-			final OnCompleted<FibEntry> onCompleted, OnFailed onFailed) {
-        // in the createFace method, the Face should be checked first, if exists,
-		// just use that one, if not, create a new one.
-		createFace(uri);
-	}
+    public void stop() {
+        pool.shutdownNow();
+    }
 
-	public void removeNextHop(Name name, FaceUri uri) {
-		pipeline.getFib().remove(name);
-	}
+    public void addNextHop(final Name prefix, FaceUri uri, final int cost,
+            final OnCompleted<FibEntry> onCompleted) {
+        createFace(uri, new OnCompleted<Face>() {
 
-	public Collection<FibEntry> listNextHops() {
-		return pipeline.getFib().list();
-	}
+            @Override
+            public void onCompleted(Face result) {
+                if(result instanceof Face) {
+                    pipeline.addFace((Face) result);
+                    Pair<FibEntry> fibEntry = pipeline.getFib().insert(prefix, result, cost);
+                    onCompleted.onCompleted(fibEntry.getFirst());
+                }
+            }
+            
+        });
+    }
 
-	/**
-	 * set the Strategy used by a specific name prefix. Notice, the Strategy
-	 * should be installed first.
-	 *
-	 * @param prefix
-	 * @param strategy
-	 */
-	public void setStrategy(Name prefix, Name strategy) {
-		pipeline.getStrategyChoice().insert(prefix, strategy);
-	}
+    public void removeNextHop(Name name, FaceUri uri) {
+        pipeline.getFib().remove(name);
+    }
 
-	public void unsetStrategy(Name prefix) {
-		pipeline.getStrategyChoice().erase(prefix);
-	}
+    public Collection<FibEntry> listNextHops() {
+        return pipeline.getFib().list();
+    }
 
-	public Collection<StrategyChoiceEntry> listStrategies() {
-		return pipeline.getStrategyChoice().list();
-	}
+    /**
+     * set the Strategy used by a specific name prefix. Notice, the Strategy
+     * should be installed first.
+     *
+     * @param prefix
+     * @param strategy
+     */
+    public void setStrategy(Name prefix, Name strategy) {
+        pipeline.getStrategyChoice().insert(prefix, strategy);
+    }
 
-	public void createFace(FaceUri remoteUri) {
-		faceManager.createFaceAndConnect(remoteUri);
-	}
+    public void unsetStrategy(Name prefix) {
+        pipeline.getStrategyChoice().erase(prefix);
+    }
 
-	public void destroyFace(Face face) {
-		faceManager.destroyFace(face);
-	}
+    public Collection<StrategyChoiceEntry> listStrategies() {
+        return pipeline.getStrategyChoice().list();
+    }
+    
+    /**
+     * the reference to the face will be returned in the onCompleted
+     * @param remoteUri
+     * @param onCompleted 
+     */
+    public void createFace(FaceUri remoteUri, OnCompleted<Face> onFaceCreated) {
+        faceManager.createFaceAndConnect(remoteUri, onFaceCreated);
+    }
+    
+    /**
+     * the default createFace, the reference to the face will not be returned.
+     * @param remoteUri 
+     */
+    public void createFace(FaceUri remoteUri) {
+        faceManager.createFaceAndConnect(remoteUri);
+    }
 
-	public Collection<? extends Face> listFaces() {
-		return faceManager.listFaces();
-	}
+    public void destroyFace(Face face) {
+        faceManager.destroyFace(face);
+    }
 
-	@Override
-	public void onData(Data data, Face incomingFace) {
-		List<List<PitEntry>> matches = pipeline.getPit().findAllMatches(data);
-		for (List<PitEntry> entry : matches) {
-			for (PitEntry one : entry) {
+    public Collection<? extends Face> listFaces() {
+        return faceManager.listFaces();
+    }
 
-				// TODO: satisfy interests here
-			}
-		}
+    @Override
+    public void onData(Data data, Face incomingFace) {
+        List<List<PitEntry>> matches = pipeline.getPit().findAllMatches(data);
+        for (List<PitEntry> entry : matches) {
+            for (PitEntry one : entry) {
 
-		pipeline.getCs().insert(data, matches.isEmpty());
-	}
+                // TODO: satisfy interests here
+            }
+        }
 
-	@Override
-	public void onInterest(Interest interest, final Face face) {
-//		try {
-//			cs.find(interest, new SearchCsCallback() {
-//
-//				@Override
-//				public void hitCallback(Interest interest, Data data) {
-//					try {
-//						// TODO erase PIT entries
-//						face.sendData(data);
-//					} catch (IOException ex) {
-//						// TODO push exception up appropriately
-//						throw new RuntimeException(ex);
-//					}
-//				}
-//
-//				@Override
-//				public void missCallback(Interest interest) {
-//					pit.insert(interest);
-//
-//					for (Face face : sct.findEffectiveStrategy(interest.getName()).determineOutgoingFaces(interest, Forwarder.this)) {
-//						// TODO check nonces for loops
-//						try {
-//							face.sendInterest(interest);
-//						} catch (IOException ex) {
-//							// TODO push exception up appropriately
-//							throw new RuntimeException(ex);
-//						}
-//					}
-//				}
-//			});
-//		} catch (Exception ex) {
-//			// TODO push exception up appropriately
-//			throw new RuntimeException(ex);
-//		}
-	}
+        pipeline.getCs().insert(data, matches.isEmpty());
+    }
+
+    @Override
+    public void onInterest(Interest interest, final Face face) {
+
+    }
 }

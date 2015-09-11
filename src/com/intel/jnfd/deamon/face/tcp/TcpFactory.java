@@ -181,30 +181,48 @@ public final class TcpFactory implements ProtocolFactory {
     }
 
     @Override
-    public void createFace(FaceUri localFaceUri, FaceUri remoteFaceUri,
-            boolean newChannel) {
-        TcpChannel channel = (TcpChannel) findChannel(localFaceUri);
-        if (channel == null) {
-            // If do not require to create new channel
-            if (newChannel == false) {
-                onFaceCreationFailed.onFailed(new Exception("No channel found "
-                        + "for " + localFaceUri));
+    public void createFace(FaceUri remoteFaceUri, OnCompleted<Face> onFaceCreated) {
+        for (Map.Entry<Integer, TcpChannel> entry : channelMap.entrySet()) {
+            TcpChannel channel = entry.getValue();
+            if ((channel.isEnabledV4() && (!remoteFaceUri.getIsV6()))
+                    || channel.isEnabledV6() && remoteFaceUri.getIsV6()) {
+                try {
+                    channel.connect(remoteFaceUri, onFaceCreated);
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                    onFaceCreationFailed.onFailed(ex);
+                }
                 return;
             }
-            channel = (TcpChannel) createChannel(localFaceUri);
-            channelMap.put(localFaceUri.getPort(), channel);
         }
-        if (channel == null) {
-            onFaceCreationFailed.onFailed(new Exception("No channel found or "
-                    + "created for " + localFaceUri));
-        }
-        try {
-            channel.connect(remoteFaceUri);
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
-            onFaceCreationFailed.onFailed(ex);
-        }
+        onFaceCreationFailed.onFailed(new IOException(
+                "No channels available to connect to for " + remoteFaceUri));
     }
+//    @Override
+//    public void createFace(FaceUri localFaceUri, FaceUri remoteFaceUri,
+//            boolean newChannel) {
+//        TcpChannel channel = (TcpChannel) findChannel(localFaceUri);
+//        if (channel == null) {
+//            // If do not require to create new channel
+//            if (newChannel == false) {
+//                onFaceCreationFailed.onFailed(new Exception("No channel found "
+//                        + "for " + localFaceUri));
+//                return;
+//            }
+//            channel = (TcpChannel) createChannel(localFaceUri);
+//            channelMap.put(localFaceUri.getPort(), channel);
+//        }
+//        if (channel == null) {
+//            onFaceCreationFailed.onFailed(new Exception("No channel found or "
+//                    + "created for " + localFaceUri));
+//        }
+//        try {
+//            channel.connect(remoteFaceUri);
+//        } catch (IOException ex) {
+//            logger.log(Level.SEVERE, null, ex);
+//            onFaceCreationFailed.onFailed(ex);
+//        }
+//    }
 
     @Override
     public void destroyFace(Face face) {

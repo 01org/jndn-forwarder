@@ -5,6 +5,7 @@
  */
 package com.intel.jndn.forwarder.api;
 
+import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
 import com.intel.jnfd.deamon.face.FaceUri;
 import java.util.Collection;
 
@@ -30,7 +31,9 @@ public interface FaceManager {
         
         public void createFaceAndConnect(FaceUri remoteUri);
         
-	public void createFaceAndConnect(FaceUri localUri, FaceUri remoteUri);
+        public void createFaceAndConnect(FaceUri remoteUri, OnCompleted<Face> onFaceCreated);
+        
+//	public void createFaceAndConnect(FaceUri localUri, FaceUri remoteUri);
 
 	public Collection<? extends Face> listFaces();
         

@@ -5,6 +5,7 @@
  */
 package com.intel.jndn.forwarder.api;
 
+import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
 import com.intel.jnfd.deamon.face.FaceUri;
 import java.util.Collection;
 
@@ -35,18 +36,13 @@ public interface ProtocolFactory {
     public void destroyChannel(FaceUri faceUri);
 
     public void createFace(FaceUri remoteFaceUri);
+    
+    public void createFace(FaceUri remoteFaceUri, OnCompleted<Face> onFaceCreated);
 
     public Collection<? extends Face> listFaces();
 
-    /**
-     * find an existing channel to connect to remote faceuri or create a new one
-     *
-     * @param localFaceUri
-     * @param remoteFaceUri
-     * @param newChannel if no existing channel found, create a new one or not.
-     */
-    public void createFace(FaceUri localFaceUri, FaceUri remoteFaceUri, 
-            boolean newChannel);
+//    public void createFace(FaceUri localFaceUri, FaceUri remoteFaceUri, 
+//            boolean newChannel);
 
     public void destroyFace(Face face);
 
