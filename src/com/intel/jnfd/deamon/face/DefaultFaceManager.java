@@ -139,7 +139,7 @@ public final class DefaultFaceManager implements FaceManager {
         }
         protocol.createFace(remoteUri);
     }
-    
+
     @Override
     public void createFaceAndConnect(FaceUri remoteUri, OnCompleted<Face> onFaceCreated) {
         ProtocolFactory protocol = protocols.get(remoteUri.getScheme());
@@ -161,7 +161,6 @@ public final class DefaultFaceManager implements FaceManager {
 //        }
 //        protocol.createFace(localUri, remoteUri, true);
 //    }
-
     @Override
     public void destroyFace(Face face) {
         logger.log(Level.INFO, "destroyFace: {0}", face);
@@ -287,18 +286,35 @@ public final class DefaultFaceManager implements FaceManager {
     private final OnDataReceived onDataReceived = new OnDataReceived() {
 
         @Override
-        public void onData(Data data, Face incomingFace) {
+        public void onData(final Data data, final Face incomingFace) {
             logger.info("OnData is called");
-            pipeline.onData(incomingFace, data);
+//            pipeline.onData(incomingFace, data);
+            pool.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    pipeline.onData(incomingFace, data);
+                }
+
+            });
         }
 
     };
     private final OnInterestReceived onInterestReceived = new OnInterestReceived() {
 
         @Override
-        public void onInterest(Interest interest, Face face) {
+        public void onInterest(final Interest interest, final Face face) {
             logger.info("OnInterest is called");
-            pipeline.onInterest(face, interest);
+//            pipeline.onInterest(face, interest);
+            pool.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    pipeline.onInterest(face, interest);
+                }
+
+            });
+
         }
 
     };
