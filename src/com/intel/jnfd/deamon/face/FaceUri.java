@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * InetAddress). If host names are used, please use FaceUri.getAddressesByName
  * to resolve and choose the proper IP address first.
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class FaceUri {
 

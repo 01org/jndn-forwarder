@@ -15,7 +15,7 @@ package com.intel.jnfd.deamon.face;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class ParseFaceUriException extends Exception {
 

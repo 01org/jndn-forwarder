@@ -19,7 +19,7 @@ import java.util.Set;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public abstract class AbstractChannel implements Channel {
 

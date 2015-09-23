@@ -25,7 +25,7 @@ import net.named_data.jndn.Name;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  * @param <V>
  */
 public class HashMapRepo<V> implements NameTable<V> {

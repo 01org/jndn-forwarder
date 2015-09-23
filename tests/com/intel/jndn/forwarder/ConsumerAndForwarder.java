@@ -19,7 +19,7 @@ import org.junit.Before;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class ConsumerAndForwarder {
 

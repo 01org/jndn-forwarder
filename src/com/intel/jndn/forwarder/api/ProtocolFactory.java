@@ -19,7 +19,7 @@ import java.util.Collection;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public interface ProtocolFactory {
 

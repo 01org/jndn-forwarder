@@ -22,7 +22,7 @@ import java.nio.channels.AsynchronousSocketChannel;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class TcpLocalFace extends TcpFace {
 

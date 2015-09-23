@@ -27,7 +27,7 @@ import net.named_data.jndn.util.Blob;
  * therefore, interests with the same name but different selectors will be held
  * in different PitEntries.
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class PitEntry extends StrategyInfoHost {
 

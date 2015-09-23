@@ -42,7 +42,7 @@ import java.util.logging.Logger;
  * created, If IPv6 is enabled on this channel, face relied on IPv6 can be
  * created,
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class TcpChannel extends AbstractChannel {
 

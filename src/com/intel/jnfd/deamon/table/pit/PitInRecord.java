@@ -18,7 +18,7 @@ import net.named_data.jndn.Interest;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class PitInRecord extends PitFaceRecord {
 

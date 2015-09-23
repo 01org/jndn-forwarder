@@ -27,7 +27,7 @@ import net.named_data.jndn.util.Common;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class NameUtil {
 
