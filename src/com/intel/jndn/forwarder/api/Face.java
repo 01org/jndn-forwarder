@@ -24,7 +24,7 @@ public interface Face {
 	public void close() throws IOException;
 
 	public int getFaceId();
-	
+
 	public void setFaceId(int id);
 
 	public FaceUri getLocalUri();
@@ -34,7 +34,7 @@ public interface Face {
 	public boolean isLocal();
 
 	public boolean isMultiAccess();
-        
-        @Override
-        public String toString();
+
+	@Override
+	public String toString();
 }

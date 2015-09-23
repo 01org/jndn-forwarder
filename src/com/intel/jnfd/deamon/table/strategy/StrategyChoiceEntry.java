@@ -14,36 +14,36 @@ import net.named_data.jndn.Name;
  */
 public class StrategyChoiceEntry {
 
-    public StrategyChoiceEntry(Name prefix) {
-        this.prefix = prefix;
-        strategy = null;
-    }
+	public StrategyChoiceEntry(Name prefix) {
+		this.prefix = prefix;
+		strategy = null;
+	}
 
-    public StrategyChoiceEntry(Name prefix, Strategy strategy) {
-        this.prefix = prefix;
-        this.strategy = strategy;
-    }
+	public StrategyChoiceEntry(Name prefix, Strategy strategy) {
+		this.prefix = prefix;
+		this.strategy = strategy;
+	}
 
-    public Name getPrefix() {
-        return prefix;
-    }
+	public Name getPrefix() {
+		return prefix;
+	}
 
-    public void setPrefix(Name prefix) {
-        this.prefix = prefix;
-    }
+	public void setPrefix(Name prefix) {
+		this.prefix = prefix;
+	}
 
-    public Strategy getStrategy() {
-        return strategy;
-    }
+	public Strategy getStrategy() {
+		return strategy;
+	}
 
-    public void setStrategy(Strategy strategy) {
-        this.strategy = strategy;
-    }
+	public void setStrategy(Strategy strategy) {
+		this.strategy = strategy;
+	}
 
-    public Name getStrategyName() {
-        return strategy.getName();
-    }
+	public Name getStrategyName() {
+		return strategy.getName();
+	}
 
-    private Name prefix;
-    private Strategy strategy;
+	private Name prefix;
+	private Strategy strategy;
 }

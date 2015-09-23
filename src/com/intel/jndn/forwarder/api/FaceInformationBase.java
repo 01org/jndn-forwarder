@@ -18,15 +18,15 @@ import net.named_data.jndn.Name;
  */
 public interface FaceInformationBase extends OnInterestReceived, OnDataReceived {
 
-    public Pair<FibEntry> insert(Name prefix, Face face, int cost);
+	public Pair<FibEntry> insert(Name prefix, Face face, int cost);
 
-    public FibEntry remove(Name prefix);
+	public FibEntry remove(Name prefix);
 
-    public Collection<FibEntry> list();
+	public Collection<FibEntry> list();
 
-    public FibEntry findLongestPrefixMatch(Name prefix);
+	public FibEntry findLongestPrefixMatch(Name prefix);
 
-    public FibEntry findExactMatch(Name prefix);
+	public FibEntry findExactMatch(Name prefix);
 
-    public void removeNextHopFromAllEntries(Face face);
+	public void removeNextHopFromAllEntries(Face face);
 }

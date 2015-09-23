@@ -14,7 +14,7 @@ import org.junit.Test;
  * @author Andrew Brown <andrew.brown@intel.com>
  */
 public class HashMapRepoTest {
-	
+
 	HashMapRepo instance = new HashMapRepo();
 
 	@Test
@@ -25,7 +25,7 @@ public class HashMapRepoTest {
 		instance.insert(new Name("/a"), a);
 		instance.insert(new Name("/a/b"), ab);
 		instance.insert(new Name("/a/b/c"), abc);
-		
+
 		assertEquals(abc, instance.findLongestPrefixMatch(new Name("/a/b/c/d")));
 		assertEquals(ab, instance.findExactMatch(new Name("/a/b")));
 		assertNull(instance.findLongestPrefixMatch(new Name("/")));

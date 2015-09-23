@@ -30,16 +30,16 @@ public class Producer implements OnInterestCallback {
 	@Override
 	public void onInterest(Name prefix, Interest interest, Face face, long interestFilterId, InterestFilter filter) {
 		// synchronized (count) {
-			try {
-				System.out.println("Interest received: " + interest.toUri());
-				Data data = new Data(new Name(interest.getName()).appendSegment(count));
-				data.setContent(blob);
-				data.getMetaInfo().setFreshnessPeriod(1000);
-				face.putData(data);
-				//count++;
-			} catch (IOException ex) {
-				logger.log(Level.SEVERE, "Data write failed.", ex);
-			}
+		try {
+			System.out.println("Interest received: " + interest.toUri());
+			Data data = new Data(new Name(interest.getName()).appendSegment(count));
+			data.setContent(blob);
+			data.getMetaInfo().setFreshnessPeriod(1000);
+			face.putData(data);
+			//count++;
+		} catch (IOException ex) {
+			logger.log(Level.SEVERE, "Data write failed.", ex);
+		}
 		// }
 	}
 

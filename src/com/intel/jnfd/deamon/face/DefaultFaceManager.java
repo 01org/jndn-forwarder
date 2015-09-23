@@ -34,122 +34,122 @@ import net.named_data.jndn.Interest;
  */
 public final class DefaultFaceManager implements FaceManager {
 
-    public DefaultFaceManager(ExecutorService pool, ForwardingPipeline pipeline) {
-        this.pool = pool;
-        this.pipeline = pipeline;
+	public DefaultFaceManager(ExecutorService pool, ForwardingPipeline pipeline) {
+		this.pool = pool;
+		this.pipeline = pipeline;
 
-        registerProtocol(new TcpFactory(this.pool,
-                onChannelCreated,
-                onChannelCreationFailed,
-                onChannelDestroyed,
-                onChannelDestructionFailed,
-                onFaceCreated,
-                onFaceCreationFailed,
-                onFaceDestroyed,
-                onFaceDestructionFailed,
-                onFaceDestroyedByPeer,
-                onDataReceived,
-                onInterestReceived));
-        logger.setLevel(NfdCommon.LOG_LEVEL);
-    }
+		registerProtocol(new TcpFactory(this.pool,
+				onChannelCreated,
+				onChannelCreationFailed,
+				onChannelDestroyed,
+				onChannelDestructionFailed,
+				onFaceCreated,
+				onFaceCreationFailed,
+				onFaceDestroyed,
+				onFaceDestructionFailed,
+				onFaceDestroyedByPeer,
+				onDataReceived,
+				onInterestReceived));
+		logger.setLevel(NfdCommon.LOG_LEVEL);
+	}
 
-    public DefaultFaceManager(ForwardingPipeline pipeline) {
-        this(Executors.newCachedThreadPool(), pipeline);
-    }
+	public DefaultFaceManager(ForwardingPipeline pipeline) {
+		this(Executors.newCachedThreadPool(), pipeline);
+	}
 
-    @Override
-    public void registerProtocol(ProtocolFactory protocolFactory) {
-        for (String one : protocolFactory.scheme()) {
-            if (!protocols.containsKey(one)) {
-                protocols.put(one, protocolFactory);
-            }
-        }
-    }
+	@Override
+	public void registerProtocol(ProtocolFactory protocolFactory) {
+		for (String one : protocolFactory.scheme()) {
+			if (!protocols.containsKey(one)) {
+				protocols.put(one, protocolFactory);
+			}
+		}
+	}
 
-    @Override
-    public Collection<ProtocolFactory> listProtocols() {
-        return protocols.values();
-    }
+	@Override
+	public Collection<ProtocolFactory> listProtocols() {
+		return protocols.values();
+	}
 
-    @Override
-    public Collection<String> listProtocolNames() {
-        return protocols.keySet();
-    }
+	@Override
+	public Collection<String> listProtocolNames() {
+		return protocols.keySet();
+	}
 
-    public ProtocolFactory findProtocol(String scheme) {
-        if (!protocols.containsKey(scheme)) {
-            throw new IllegalArgumentException("Unknown protocol scheme: " + scheme);
-        } else {
-            return protocols.get(scheme);
-        }
-    }
+	public ProtocolFactory findProtocol(String scheme) {
+		if (!protocols.containsKey(scheme)) {
+			throw new IllegalArgumentException("Unknown protocol scheme: " + scheme);
+		} else {
+			return protocols.get(scheme);
+		}
+	}
 
-    @Override
-    public void createChannelAndListen(FaceUri localUri) {
-        ProtocolFactory protocol = findProtocol(localUri.getScheme());
-        if (protocol == null) {
-            onChannelCreationFailed.onFailed(new Exception("No factory found "
-                    + "for " + localUri.getScheme()));
-            return;
-        }
-        //Create the channel instance and start to listen
-        Channel channel = protocol.createChannel(localUri);
-        try {
-            channel.open();
-            onChannelCreated.onCompleted(channel);
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
-            onChannelCreationFailed.onFailed(ex);
-        }
-    }
+	@Override
+	public void createChannelAndListen(FaceUri localUri) {
+		ProtocolFactory protocol = findProtocol(localUri.getScheme());
+		if (protocol == null) {
+			onChannelCreationFailed.onFailed(new Exception("No factory found "
+					+ "for " + localUri.getScheme()));
+			return;
+		}
+		//Create the channel instance and start to listen
+		Channel channel = protocol.createChannel(localUri);
+		try {
+			channel.open();
+			onChannelCreated.onCompleted(channel);
+		} catch (IOException ex) {
+			logger.log(Level.SEVERE, null, ex);
+			onChannelCreationFailed.onFailed(ex);
+		}
+	}
 
-    @Override
-    public void destroyChannel(FaceUri localUri) {
-        ProtocolFactory protocol = protocols.get(localUri.getScheme());
-        if (protocol == null) {
-            return;
-        }
-        protocol.destroyChannel(localUri);
-    }
+	@Override
+	public void destroyChannel(FaceUri localUri) {
+		ProtocolFactory protocol = protocols.get(localUri.getScheme());
+		if (protocol == null) {
+			return;
+		}
+		protocol.destroyChannel(localUri);
+	}
 
-    @Override
-    public Collection<? extends Channel> listChannels() {
-        Collection<Channel> result = new HashSet<>();
-        for (ProtocolFactory one : protocols.values()) {
-            result.addAll(one.listChannels());
-        }
-        return result;
-    }
+	@Override
+	public Collection<? extends Channel> listChannels() {
+		Collection<Channel> result = new HashSet<>();
+		for (ProtocolFactory one : protocols.values()) {
+			result.addAll(one.listChannels());
+		}
+		return result;
+	}
 
-    @Override
-    public Collection<? extends Channel> listChannels(String scheme) {
-        if (!protocols.containsKey(scheme)) {
-            return null;
-        }
-        return protocols.get(scheme).listChannels();
-    }
+	@Override
+	public Collection<? extends Channel> listChannels(String scheme) {
+		if (!protocols.containsKey(scheme)) {
+			return null;
+		}
+		return protocols.get(scheme).listChannels();
+	}
 
-    @Override
-    public void createFaceAndConnect(FaceUri remoteUri) {
-        ProtocolFactory protocol = protocols.get(remoteUri.getScheme());
-        if (protocol == null) {
-            onFaceCreationFailed.onFailed(new Exception("No such scheme found"
-                    + remoteUri.getScheme()));
-            return;
-        }
-        protocol.createFace(remoteUri);
-    }
-    
-    @Override
-    public void createFaceAndConnect(FaceUri remoteUri, OnCompleted<Face> onFaceCreated) {
-        ProtocolFactory protocol = protocols.get(remoteUri.getScheme());
-        if (protocol == null) {
-            onFaceCreationFailed.onFailed(new Exception("No such scheme found"
-                    + remoteUri.getScheme()));
-            return;
-        }
-        protocol.createFace(remoteUri, onFaceCreated);
-    }
+	@Override
+	public void createFaceAndConnect(FaceUri remoteUri) {
+		ProtocolFactory protocol = protocols.get(remoteUri.getScheme());
+		if (protocol == null) {
+			onFaceCreationFailed.onFailed(new Exception("No such scheme found"
+					+ remoteUri.getScheme()));
+			return;
+		}
+		protocol.createFace(remoteUri);
+	}
+
+	@Override
+	public void createFaceAndConnect(FaceUri remoteUri, OnCompleted<Face> onFaceCreated) {
+		ProtocolFactory protocol = protocols.get(remoteUri.getScheme());
+		if (protocol == null) {
+			onFaceCreationFailed.onFailed(new Exception("No such scheme found"
+					+ remoteUri.getScheme()));
+			return;
+		}
+		protocol.createFace(remoteUri, onFaceCreated);
+	}
 
 //    @Override
 //    public void createFaceAndConnect(FaceUri localUri, FaceUri remoteUri) {
@@ -161,145 +161,144 @@ public final class DefaultFaceManager implements FaceManager {
 //        }
 //        protocol.createFace(localUri, remoteUri, true);
 //    }
+	@Override
+	public void destroyFace(Face face) {
+		logger.log(Level.INFO, "destroyFace: {0}", face);
+		ProtocolFactory protocol = protocols.get(face.getLocalUri().getScheme());
+		if (protocol == null) {
+			onFaceDestructionFailed.onFailed(new Exception("No such scheme found "
+					+ face.getLocalUri().getScheme()));
+			return;
+		}
+		protocol.destroyFace(face);
+	}
 
-    @Override
-    public void destroyFace(Face face) {
-        logger.log(Level.INFO, "destroyFace: {0}", face);
-        ProtocolFactory protocol = protocols.get(face.getLocalUri().getScheme());
-        if (protocol == null) {
-            onFaceDestructionFailed.onFailed(new Exception("No such scheme found "
-                    + face.getLocalUri().getScheme()));
-            return;
-        }
-        protocol.destroyFace(face);
-    }
+	@Override
+	public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri) {
+		ProtocolFactory protocol = protocols.get(localFaceUri.getScheme());
+		if (protocol == null) {
+			onFaceDestructionFailed.onFailed(new Exception("No such face found "
+					+ localFaceUri.getScheme()));
+			return;
+		}
+		protocol.destroyFace(localFaceUri, remoteFaceUri);
+	}
 
-    @Override
-    public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri) {
-        ProtocolFactory protocol = protocols.get(localFaceUri.getScheme());
-        if (protocol == null) {
-            onFaceDestructionFailed.onFailed(new Exception("No such face found "
-                    + localFaceUri.getScheme()));
-            return;
-        }
-        protocol.destroyFace(localFaceUri, remoteFaceUri);
-    }
+	@Override
+	public Collection<? extends Face> listFaces() {
+		Collection<Face> result = new HashSet<>();
+		for (ProtocolFactory one : protocols.values()) {
+			result.addAll(one.listFaces());
+		}
+		return result;
+	}
 
-    @Override
-    public Collection<? extends Face> listFaces() {
-        Collection<Face> result = new HashSet<>();
-        for (ProtocolFactory one : protocols.values()) {
-            result.addAll(one.listFaces());
-        }
-        return result;
-    }
+	@Override
+	public Collection<? extends Face> listFaces(String scheme) {
+		if (!protocols.containsKey(scheme)) {
+			return null;
+		}
+		return protocols.get(scheme).listFaces();
+	}
 
-    @Override
-    public Collection<? extends Face> listFaces(String scheme) {
-        if (!protocols.containsKey(scheme)) {
-            return null;
-        }
-        return protocols.get(scheme).listFaces();
-    }
+	private final Map<String, ProtocolFactory> protocols = new HashMap<>();
+	private final ExecutorService pool;
+	private final ForwardingPipeline pipeline;
+	private static final Logger logger = Logger.getLogger(DefaultFaceManager.class.getName());
 
-    private final Map<String, ProtocolFactory> protocols = new HashMap<>();
-    private final ExecutorService pool;
-    private final ForwardingPipeline pipeline;
-    private static final Logger logger = Logger.getLogger(DefaultFaceManager.class.getName());
+	// All the callbacks
+	private final OnCompleted<Channel> onChannelCreated = new OnCompleted() {
 
-    // All the callbacks
-    private final OnCompleted<Channel> onChannelCreated = new OnCompleted() {
+		@Override
+		public void onCompleted(Object result) {
 
-        @Override
-        public void onCompleted(Object result) {
+		}
 
-        }
+	};
+	private final OnFailed onChannelCreationFailed = new OnFailed() {
 
-    };
-    private final OnFailed onChannelCreationFailed = new OnFailed() {
+		@Override
+		public void onFailed(Throwable error) {
 
-        @Override
-        public void onFailed(Throwable error) {
+		}
 
-        }
+	};
+	private final OnCompleted<Channel> onChannelDestroyed = new OnCompleted() {
 
-    };
-    private final OnCompleted<Channel> onChannelDestroyed = new OnCompleted() {
+		@Override
+		public void onCompleted(Object result) {
 
-        @Override
-        public void onCompleted(Object result) {
+		}
 
-        }
+	};
+	private final OnFailed onChannelDestructionFailed = new OnFailed() {
 
-    };
-    private final OnFailed onChannelDestructionFailed = new OnFailed() {
+		@Override
+		public void onFailed(Throwable error) {
 
-        @Override
-        public void onFailed(Throwable error) {
+		}
 
-        }
+	};
+	private final OnCompleted<Face> onFaceCreated = new OnCompleted() {
 
-    };
-    private final OnCompleted<Face> onFaceCreated = new OnCompleted() {
+		@Override
+		public void onCompleted(Object result) {
+			if (result instanceof Face) {
+				pipeline.addFace((Face) result);
+			}
+		}
 
-        @Override
-        public void onCompleted(Object result) {
-            if (result instanceof Face) {
-                pipeline.addFace((Face) result);
-            }
-        }
+	};
+	private final OnFailed onFaceCreationFailed = new OnFailed() {
 
-    };
-    private final OnFailed onFaceCreationFailed = new OnFailed() {
+		@Override
+		public void onFailed(Throwable error) {
 
-        @Override
-        public void onFailed(Throwable error) {
+		}
 
-        }
+	};
+	private final OnCompleted<Face> onFaceDestroyed = new OnCompleted() {
 
-    };
-    private final OnCompleted<Face> onFaceDestroyed = new OnCompleted() {
+		@Override
+		public void onCompleted(Object result) {
+			if (result instanceof Face) {
+				pipeline.removeFace((Face) result, null);
+			}
+		}
 
-        @Override
-        public void onCompleted(Object result) {
-            if (result instanceof Face) {
-                pipeline.removeFace((Face) result, null);
-            }
-        }
+	};
+	private final OnFailed onFaceDestructionFailed = new OnFailed() {
 
-    };
-    private final OnFailed onFaceDestructionFailed = new OnFailed() {
+		@Override
+		public void onFailed(Throwable error) {
 
-        @Override
-        public void onFailed(Throwable error) {
+		}
 
-        }
+	};
+	private final OnCompleted<Face> onFaceDestroyedByPeer = new OnCompleted() {
+		@Override
+		public void onCompleted(Object result) {
+			if (result instanceof Face) {
+				destroyFace((Face) result);
+			}
+		}
+	};
+	private final OnDataReceived onDataReceived = new OnDataReceived() {
 
-    };
-    private final OnCompleted<Face> onFaceDestroyedByPeer = new OnCompleted() {
-        @Override
-        public void onCompleted(Object result) {
-            if (result instanceof Face) {
-                destroyFace((Face) result);
-            }
-        }
-    };
-    private final OnDataReceived onDataReceived = new OnDataReceived() {
+		@Override
+		public void onData(Data data, Face incomingFace) {
+			logger.info("OnData is called");
+			pipeline.onData(incomingFace, data);
+		}
 
-        @Override
-        public void onData(Data data, Face incomingFace) {
-            logger.info("OnData is called");
-            pipeline.onData(incomingFace, data);
-        }
+	};
+	private final OnInterestReceived onInterestReceived = new OnInterestReceived() {
 
-    };
-    private final OnInterestReceived onInterestReceived = new OnInterestReceived() {
+		@Override
+		public void onInterest(Interest interest, Face face) {
+			logger.info("OnInterest is called");
+			pipeline.onInterest(face, interest);
+		}
 
-        @Override
-        public void onInterest(Interest interest, Face face) {
-            logger.info("OnInterest is called");
-            pipeline.onInterest(face, interest);
-        }
-
-    };
+	};
 }

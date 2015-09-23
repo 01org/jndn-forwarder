@@ -11,10 +11,10 @@ import com.intel.jndn.forwarder.api.Face;
  *
  * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
-public class PitOutRecord extends PitFaceRecord{
+public class PitOutRecord extends PitFaceRecord {
 
-    public PitOutRecord(Face face) {
-        super(face);
-    }
-    
+	public PitOutRecord(Face face) {
+		super(face);
+	}
+
 }

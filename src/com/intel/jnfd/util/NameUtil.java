@@ -53,7 +53,7 @@ public class NameUtil {
 					return false;
 				}
 			} else {
-                // Interest Name is same length as Data full Name, but last component isn't digest
+				// Interest Name is same length as Data full Name, but last component isn't digest
 				// so there's no possibility of matching
 				return false;
 			}
@@ -64,7 +64,7 @@ public class NameUtil {
 			}
 		}
 
-        // check Exclude
+		// check Exclude
 		// Exclude won't be violated if Interest Name is same as Data full Name
 		if (!(interest.getExclude().size() == 0) && fullNameLength > interestNameLength) {
 			if (interestNameLength == fullNameLength - 1) {
@@ -72,7 +72,7 @@ public class NameUtil {
 				if (interest.getExclude().matches(getFullNameFromData(data).get(interestNameLength))) {
 					return false;
 				}
-                // There's opportunity to inspect the Exclude filter and determine whether
+				// There's opportunity to inspect the Exclude filter and determine whether
 				// the digest would make a difference.
 				// eg. "<NameComponent>AA</NameComponent><Any/>" doesn't exclude any digest -
 				//     fullName not needed;
@@ -93,7 +93,7 @@ public class NameUtil {
 				}
 			}
 		}
-		
+
 		// check PublisherPublicKeyLocator
 		KeyLocator interestKeyLocator = interest.getKeyLocator();
 		if (interestKeyLocator.getType() != KeyLocatorType.NONE) {
@@ -118,7 +118,7 @@ public class NameUtil {
 	public static Name getFullNameFromData(Data data) {
 		// copy the name, do not use the same name to do the work
 		Name fullName = new Name(data.getName());
-        // FIX: I don't know if this part is the same as the c++ code, as the code 
+		// FIX: I don't know if this part is the same as the c++ code, as the code 
 		// of c++ and Java are totally different
 		Component component = new Component(
 				Common.digestSha256(data.wireEncode().buf()));

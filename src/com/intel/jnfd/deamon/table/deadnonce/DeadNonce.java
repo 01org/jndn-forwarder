@@ -13,14 +13,14 @@ import net.named_data.jndn.util.Blob;
  * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public interface DeadNonce {
-    
-    public void add(Name name, Blob nonce);
-    
-    public void evictStaleEntries();
-    
-    public boolean find(Name name, Blob nonce);
-    
-    public int size();
-    
-    public long getLifetime();
+
+	public void add(Name name, Blob nonce);
+
+	public void evictStaleEntries();
+
+	public boolean find(Name name, Blob nonce);
+
+	public int size();
+
+	public long getLifetime();
 }

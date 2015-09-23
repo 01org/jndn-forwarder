@@ -18,12 +18,12 @@ import java.nio.channels.AsynchronousSocketChannel;
  */
 public class TcpLocalFace extends TcpFace {
 
-    public TcpLocalFace(FaceUri localUri, FaceUri remoteUri,
-            AsynchronousSocketChannel asynchronousSocketChannel, boolean isLocal,
-            boolean isMultiAccess, OnCompleted<Face> onFaceDestroyedByPeer, 
-            OnDataReceived onDataReceived, OnInterestReceived onInterestReceived) {
-        super(localUri, remoteUri, asynchronousSocketChannel, isLocal, isMultiAccess, 
-                onFaceDestroyedByPeer, onDataReceived, onInterestReceived);
-    }
+	public TcpLocalFace(FaceUri localUri, FaceUri remoteUri,
+			AsynchronousSocketChannel asynchronousSocketChannel, boolean isLocal,
+			boolean isMultiAccess, OnCompleted<Face> onFaceDestroyedByPeer,
+			OnDataReceived onDataReceived, OnInterestReceived onInterestReceived) {
+		super(localUri, remoteUri, asynchronousSocketChannel, isLocal, isMultiAccess,
+				onFaceDestroyedByPeer, onDataReceived, onInterestReceived);
+	}
 
 }

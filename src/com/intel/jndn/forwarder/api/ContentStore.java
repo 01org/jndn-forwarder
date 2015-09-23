@@ -52,6 +52,7 @@ public interface ContentStore {
 
 	/**
 	 * Change the maximum number of data packets allowed
+	 *
 	 * @param maxNumberOfDataPackets the new maximum limit
 	 */
 	public void limit(int maxNumberOfDataPackets);

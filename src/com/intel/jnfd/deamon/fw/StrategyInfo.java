@@ -10,7 +10,7 @@ package com.intel.jnfd.deamon.fw;
  * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public abstract class StrategyInfo {
-    
-    public abstract int getTypeId();
-    
+
+	public abstract int getTypeId();
+
 }

@@ -25,9 +25,9 @@ public class Main {
 //		List<ProtocolFactory> protocols = ImplementationLoader.load(ProtocolFactory.class);
 //		List<Strategy> strategies = ImplementationLoader.load(Strategy.class);
 		// TODO pass these in to the forwarder
-		
+
 		Forwarder forwarder = new Forwarder();
 		forwarder.run();
-                
+
 	}
 }

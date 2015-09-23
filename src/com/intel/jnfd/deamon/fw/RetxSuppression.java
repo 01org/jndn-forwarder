@@ -17,33 +17,33 @@ import net.named_data.jndn.Interest;
  */
 public abstract class RetxSuppression {
 
-    public enum Result {
+	public enum Result {
 
-        /**
-         * Interest is new (not a retransmission)
-         */
-        NEW,
-        /**
-         * Interest is retransmission and should be forwarded
-         */
-        FORWARD,
-        /**
-         * Interest is retransmission and should be suppressed
-         */
-        SUPPRESS
-    }
+		/**
+		 * Interest is new (not a retransmission)
+		 */
+		NEW,
+		/**
+		 * Interest is retransmission and should be forwarded
+		 */
+		FORWARD,
+		/**
+		 * Interest is retransmission and should be suppressed
+		 */
+		SUPPRESS
+	}
 
-    public abstract Result decide(Face inFace, Interest interest,
-            PitEntry pitEntry);
+	public abstract Result decide(Face inFace, Interest interest,
+			PitEntry pitEntry);
 
-    protected long getLastOutgoing(PitEntry pitEntry) {
-        List<PitOutRecord> outRecords = pitEntry.getOutRecords();
-        long result = 0;
-        for (PitOutRecord one : outRecords) {
-            if(result < one.getLastRenewed()) {
-                result = one.getLastRenewed();
-            }
-        }
-        return result;
-    }
+	protected long getLastOutgoing(PitEntry pitEntry) {
+		List<PitOutRecord> outRecords = pitEntry.getOutRecords();
+		long result = 0;
+		for (PitOutRecord one : outRecords) {
+			if (result < one.getLastRenewed()) {
+				result = one.getLastRenewed();
+			}
+		}
+		return result;
+	}
 }

@@ -12,8 +12,9 @@ import java.util.logging.Level;
  * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class NfdCommon {
+
 	public static final long DEFAULT_INTEREST_LIFETIME = 2000;
-        
-        public static final Level LOG_LEVEL = Level.WARNING;
-    
+
+	public static final Level LOG_LEVEL = Level.WARNING;
+
 }

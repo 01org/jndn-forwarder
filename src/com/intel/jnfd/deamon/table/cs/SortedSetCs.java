@@ -53,7 +53,7 @@ public class SortedSetCs implements ContentStore {
 	private void evictOldestData() {
 		// evict oldest first; note: that queue may contain records already erased
 		boolean evicted = false;
-		while(!evicted){
+		while (!evicted) {
 			CsEntry oldEntry = fifoQueue.poll();
 			if (oldEntry != null) {
 				evicted = dataCache.remove(oldEntry.getName()) != null;
@@ -129,14 +129,13 @@ public class SortedSetCs implements ContentStore {
 
 	private CsEntry findLeftMost(Interest interest, Name first, Name last) {
 		ConcurrentNavigableMap<Name, CsEntry> subMap = null;
-		try{
+		try {
 			subMap = dataCache.subMap(first, true, last, false);
-		}
-		catch(Exception e){
+		} catch (Exception e) {
 			System.out.println("Error: " + interest.toUri() + ", " + first.toUri() + ", " + last.toUri());
 			e.printStackTrace();
 		}
-		
+
 		if (subMap == null) {
 			return null;
 		}

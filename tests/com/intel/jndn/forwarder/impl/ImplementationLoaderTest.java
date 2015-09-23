@@ -15,9 +15,9 @@ import org.junit.Test;
  * @author Andrew Brown <andrew.brown@intel.com>
  */
 public class ImplementationLoaderTest {
-	
+
 	@Before
-	public void setup(){
+	public void setup() {
 		ImplementationLoader.clear();
 	}
 
@@ -26,19 +26,19 @@ public class ImplementationLoaderTest {
 		List<TestInterface> load = ImplementationLoader.load(TestInterface.class);
 		assertEquals(0, load.size());
 	}
-	
+
 	@Test
 	public void testLoadManually() {
 		ImplementationLoader.register(new TestClass());
 		List<TestInterface> load = ImplementationLoader.load(TestInterface.class);
 		assertEquals(1, load.size());
 	}
-	
-	public interface TestInterface{
-		
+
+	public interface TestInterface {
+
 	}
-	
-	public class TestClass implements TestInterface{
-		
+
+	public class TestClass implements TestInterface {
+
 	}
 }
