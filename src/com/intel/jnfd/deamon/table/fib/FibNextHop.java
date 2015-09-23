@@ -11,39 +11,40 @@ import com.intel.jndn.forwarder.api.Face;
  *
  * @author zht
  */
-public class FibNextHop implements Comparable{
-    
-    public FibNextHop(Face face) {
-        this.face = face;
-    }
-    
-    public FibNextHop(Face face, long cost) {
-        this.face = face;
-        this.cost = cost;
-    }
+public class FibNextHop implements Comparable {
 
-    public Face getFace() {
-        return face;
-    }
+	public FibNextHop(Face face) {
+		this.face = face;
+	}
 
-    public long getCost() {
-        return cost;
-    }
+	public FibNextHop(Face face, long cost) {
+		this.face = face;
+		this.cost = cost;
+	}
 
-    public void setCost(long cost) {
-        this.cost = cost;
-    }
-    
-    
-    private Face face;
-    private long cost;
+	public Face getFace() {
+		return face;
+	}
 
-    @Override
-    public int compareTo(Object o) {
-        if(cost < ((FibNextHop)o).getCost())
-            return -1;
-        if(cost > ((FibNextHop)o).getCost())
-            return 1;
-        return 0;
-    }
+	public long getCost() {
+		return cost;
+	}
+
+	public void setCost(long cost) {
+		this.cost = cost;
+	}
+
+	private Face face;
+	private long cost;
+
+	@Override
+	public int compareTo(Object o) {
+		if (cost < ((FibNextHop) o).getCost()) {
+			return -1;
+		}
+		if (cost > ((FibNextHop) o).getCost()) {
+			return 1;
+		}
+		return 0;
+	}
 }

@@ -12,23 +12,21 @@ import net.named_data.jndn.Interest;
  *
  * @author zht
  */
-public class PitInRecord extends PitFaceRecord{
+public class PitInRecord extends PitFaceRecord {
 
-    public PitInRecord(Face face) {
-        super(face);
-    }
- 
-    @Override
-    public void update(Interest interest) {
-        super.update(interest);
-        this.interest = interest;
-    }
+	public PitInRecord(Face face) {
+		super(face);
+	}
 
-    public Interest getInterest() {
-        return interest;
-    }
-    
-    
-    
-    private Interest interest;
+	@Override
+	public void update(Interest interest) {
+		super.update(interest);
+		this.interest = interest;
+	}
+
+	public Interest getInterest() {
+		return interest;
+	}
+
+	private Interest interest;
 }

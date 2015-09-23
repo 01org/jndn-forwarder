@@ -17,53 +17,53 @@ import net.named_data.jndn.util.Blob;
  */
 public class PitFaceRecord extends StrategyInfoHost {
 
-    public PitFaceRecord(Face face) {
-        this.face = face;
-        lastNonce = new Blob();
-        lastRenewed = 0;
-        expiry = 0;
-    }
+	public PitFaceRecord(Face face) {
+		this.face = face;
+		lastNonce = new Blob();
+		lastRenewed = 0;
+		expiry = 0;
+	}
 
-    public Face getFace() {
-        return face;
-    }
+	public Face getFace() {
+		return face;
+	}
 
-    public Blob getLastNonce() {
-        return lastNonce;
-    }
+	public Blob getLastNonce() {
+		return lastNonce;
+	}
 
-    public long getLastRenewed() {
-        return lastRenewed;
-    }
+	public long getLastRenewed() {
+		return lastRenewed;
+	}
 
-    /**
-     * gives the time point this record expires getLastRenewed() +
-     * InterestLifetime
-     *
-     * @return
-     */
-    public long getExpiry() {
-        return expiry;
-    }
+	/**
+	 * gives the time point this record expires getLastRenewed() +
+	 * InterestLifetime
+	 *
+	 * @return
+	 */
+	public long getExpiry() {
+		return expiry;
+	}
 
-    /**
-     * updates lastNonce, lastRenewed, expiry fields
-     *
-     * @param interest
-     */
-    public void update(Interest interest) {
-        
-        lastNonce = interest.getNonce();  
-        lastRenewed = System.currentTimeMillis();
-        long lifeTime = (long) (interest.getInterestLifetimeMilliseconds());
-        if (lifeTime < 0) {
-            lifeTime = NfdCommon.DEFAULT_INTEREST_LIFETIME;
-        }
-        expiry = lastRenewed + lifeTime;
-    }
+	/**
+	 * updates lastNonce, lastRenewed, expiry fields
+	 *
+	 * @param interest
+	 */
+	public void update(Interest interest) {
 
-    private Face face;
-    private Blob lastNonce;
-    private long lastRenewed;
-    private long expiry;
+		lastNonce = interest.getNonce();
+		lastRenewed = System.currentTimeMillis();
+		long lifeTime = (long) (interest.getInterestLifetimeMilliseconds());
+		if (lifeTime < 0) {
+			lifeTime = NfdCommon.DEFAULT_INTEREST_LIFETIME;
+		}
+		expiry = lastRenewed + lifeTime;
+	}
+
+	private Face face;
+	private Blob lastNonce;
+	private long lastRenewed;
+	private long expiry;
 }

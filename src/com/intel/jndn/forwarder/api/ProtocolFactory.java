@@ -15,36 +15,35 @@ import java.util.Collection;
  */
 public interface ProtocolFactory {
 
-    /**
-     * a factory may correspond to several different schemes
-     *
-     * @return
-     */
-    public String[] scheme();
+	/**
+	 * a factory may correspond to several different schemes
+	 *
+	 * @return
+	 */
+	public String[] scheme();
 
-    /**
-     * For each schemes, it has a localUri.
-     *
-     * @return
-     */
-    public FaceUri[] defaultLocalUri();
+	/**
+	 * For each schemes, it has a localUri.
+	 *
+	 * @return
+	 */
+	public FaceUri[] defaultLocalUri();
 
-    public Channel createChannel(FaceUri faceUri);
+	public Channel createChannel(FaceUri faceUri);
 
-    public Collection<? extends Channel> listChannels();
+	public Collection<? extends Channel> listChannels();
 
-    public void destroyChannel(FaceUri faceUri);
+	public void destroyChannel(FaceUri faceUri);
 
-    public void createFace(FaceUri remoteFaceUri);
-    
-    public void createFace(FaceUri remoteFaceUri, OnCompleted<Face> onFaceCreated);
+	public void createFace(FaceUri remoteFaceUri);
 
-    public Collection<? extends Face> listFaces();
+	public void createFace(FaceUri remoteFaceUri, OnCompleted<Face> onFaceCreated);
+
+	public Collection<? extends Face> listFaces();
 
 //    public void createFace(FaceUri localFaceUri, FaceUri remoteFaceUri, 
 //            boolean newChannel);
+	public void destroyFace(Face face);
 
-    public void destroyFace(Face face);
-
-    public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri);
+	public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri);
 }

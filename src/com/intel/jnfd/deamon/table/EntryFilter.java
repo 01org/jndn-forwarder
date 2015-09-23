@@ -11,5 +11,5 @@ package com.intel.jnfd.deamon.table;
  */
 public interface EntryFilter {
 
-    public boolean filt(Object o);
+	public boolean filt(Object o);
 }

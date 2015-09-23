@@ -22,18 +22,19 @@ import java.util.Set;
  */
 public interface Channel {
 
-    /**
-     * A channel may correspond to more than one local FaceUri, for example, a tcp
-     * channel corresponds to a IPv4 and a IPv6 local FaceUri.
-     * @return 
-     */
-    public Set<FaceUri> localUri();
+	/**
+	 * A channel may correspond to more than one local FaceUri, for example, a
+	 * tcp channel corresponds to a IPv4 and a IPv6 local FaceUri.
+	 *
+	 * @return
+	 */
+	public Set<FaceUri> localUri();
 
-    public void open() throws IOException;
+	public void open() throws IOException;
 
-    public void close() throws IOException;
+	public void close() throws IOException;
 
-    public Collection<? extends Face> listFaces();
+	public Collection<? extends Face> listFaces();
 
-    public void destroyFace(FaceUri faceUri);
+	public void destroyFace(FaceUri faceUri);
 }

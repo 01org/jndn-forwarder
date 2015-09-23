@@ -18,29 +18,28 @@ public interface FaceManager {
 	public void registerProtocol(ProtocolFactory protocolFactory);
 
 	public Collection<ProtocolFactory> listProtocols();
-        
-        public Collection<String> listProtocolNames();
+
+	public Collection<String> listProtocolNames();
 
 	public void createChannelAndListen(FaceUri localUri);
 
 	public Collection<? extends Channel> listChannels();
-        
-        public Collection<? extends Channel> listChannels(String scheme);
+
+	public Collection<? extends Channel> listChannels(String scheme);
 
 	public void destroyChannel(FaceUri localUri);
-        
-        public void createFaceAndConnect(FaceUri remoteUri);
-        
-        public void createFaceAndConnect(FaceUri remoteUri, OnCompleted<Face> onFaceCreated);
-        
-//	public void createFaceAndConnect(FaceUri localUri, FaceUri remoteUri);
 
+	public void createFaceAndConnect(FaceUri remoteUri);
+
+	public void createFaceAndConnect(FaceUri remoteUri, OnCompleted<Face> onFaceCreated);
+
+//	public void createFaceAndConnect(FaceUri localUri, FaceUri remoteUri);
 	public Collection<? extends Face> listFaces();
-        
-        public Collection<? extends Face> listFaces(String scheme);
+
+	public Collection<? extends Face> listFaces(String scheme);
 
 	public void destroyFace(Face face);
-        
-        public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri);
+
+	public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri);
 
 }

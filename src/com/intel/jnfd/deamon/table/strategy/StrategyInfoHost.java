@@ -15,32 +15,32 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class StrategyInfoHost {
 
-    public StrategyInfo getStrategyInfo(int typeId) {
-        return items.get(typeId);
-    }
+	public StrategyInfo getStrategyInfo(int typeId) {
+		return items.get(typeId);
+	}
 
-    public void setStrategyInfo(StrategyInfo item) {
-        if (item == null) {
-            items.remove(item.getTypeId());
-        } else {
-            items.put(item.getTypeId(), item);
-        }
-    }
+	public void setStrategyInfo(StrategyInfo item) {
+		if (item == null) {
+			items.remove(item.getTypeId());
+		} else {
+			items.put(item.getTypeId(), item);
+		}
+	}
 
-    public <T extends StrategyInfo> StrategyInfo getOrCreateStrategyInfo(
-            T newItem)
-            throws InstantiationException, IllegalAccessException {
-        StrategyInfo oldItem = items.get(newItem.getTypeId());
-        if (oldItem != null) {
-            return oldItem;
-        }
-        items.put(newItem.getTypeId(), newItem);
-        return newItem;
-    }
+	public <T extends StrategyInfo> StrategyInfo getOrCreateStrategyInfo(
+			T newItem)
+			throws InstantiationException, IllegalAccessException {
+		StrategyInfo oldItem = items.get(newItem.getTypeId());
+		if (oldItem != null) {
+			return oldItem;
+		}
+		items.put(newItem.getTypeId(), newItem);
+		return newItem;
+	}
 
-    public void clearStrategyInfo() {
-        items.clear();
-    }
+	public void clearStrategyInfo() {
+		items.clear();
+	}
 
-    private Map<Integer, StrategyInfo> items = new ConcurrentHashMap<>();
+	private Map<Integer, StrategyInfo> items = new ConcurrentHashMap<>();
 }

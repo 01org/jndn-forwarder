@@ -20,29 +20,29 @@ import org.junit.Before;
  */
 public class ProducerAndForwarder {
 
-    public static final Name PREFIX = new Name("/test");
-    private Face producer;
-    private Forwarder forwarder;
+	public static final Name PREFIX = new Name("/test");
+	private Face producer;
+	private Forwarder forwarder;
 
-    @Before
-    public void setUp() throws Exception {
-        forwarder = new Forwarder();
-        forwarder.addNextHop(PREFIX, new FaceUri(""), 0, new OnCompleted<FibEntry>() {
+	@Before
+	public void setUp() throws Exception {
+		forwarder = new Forwarder();
+		forwarder.addNextHop(PREFIX, new FaceUri(""), 0, new OnCompleted<FibEntry>() {
 
-            @Override
-            public void onCompleted(FibEntry result) {
+			@Override
+			public void onCompleted(FibEntry result) {
 
-            }
+			}
 
-        });
-        producer = new Face();
-        setupProducer(producer);
+		});
+		producer = new Face();
+		setupProducer(producer);
 
-        Thread.sleep(500);
-    }
+		Thread.sleep(500);
+	}
 
-    private void setupProducer(final Face faceB) throws net.named_data.jndn.security.SecurityException {
-        KeyChain keyChain = configure(new Name("/producer"));
-        faceB.setCommandSigningInfo(keyChain, keyChain.getDefaultCertificateName());
-    }
+	private void setupProducer(final Face faceB) throws net.named_data.jndn.security.SecurityException {
+		KeyChain keyChain = configure(new Name("/producer"));
+		faceB.setCommandSigningInfo(keyChain, keyChain.getDefaultCertificateName());
+	}
 }

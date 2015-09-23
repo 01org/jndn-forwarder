@@ -114,7 +114,6 @@ public class StrategyChoice implements StrategyChoiceTable {
 	 strategyChoiceEntry, oldStrategy, parentStrategy);
 	 strategyChoice.erase(prefix);
 	 }*/
-        
 	@Override
 	public void erase(Name prefix) {
 		// The root strategy should not be erased.
@@ -199,7 +198,7 @@ public class StrategyChoice implements StrategyChoiceTable {
 			= new HashMapRepo<>();
 	private Map<Name, Strategy> strategyInstances = new ConcurrentSkipListMap<>();
 
-    public void findEffectiveStrategy(PitEntry pitEntry) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+	public void findEffectiveStrategy(PitEntry pitEntry) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
 }

@@ -69,7 +69,7 @@ public class TcpFaceTest {
 		final Set<Component> sent = new HashSet();
 		while (interestCount++ < totalInterests) {
 			Interest interest = new Interest(new Name(PREFIX).appendSegment(interestCount));
-                        interest.setInterestLifetimeMilliseconds(20000);
+			interest.setInterestLifetimeMilliseconds(20000);
 			sent.add(new Name().appendSegment(interestCount).get(0));
 			System.out.println("Interest sent: " + interest.toUri());
 			consumer.expressInterest(interest, new OnData() {
@@ -160,7 +160,7 @@ public class TcpFaceTest {
 
 	private String componentsToUri(Set<Component> sent) {
 		StringBuilder sb = new StringBuilder("[");
-		for(Component c : sent){
+		for (Component c : sent) {
 			sb.append(c.toEscapedString() + ", ");
 		}
 		sb.append("]");

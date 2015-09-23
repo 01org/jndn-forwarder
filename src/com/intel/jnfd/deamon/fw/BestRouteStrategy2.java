@@ -29,181 +29,181 @@ import net.named_data.jndn.Name;
  */
 public class BestRouteStrategy2 extends Strategy {
 
-    public static final Name STRATEGY_NAME
-            = new Name("ndn:/localhost/nfd/strategy/best-route/%FD%03");
+	public static final Name STRATEGY_NAME
+			= new Name("ndn:/localhost/nfd/strategy/best-route/%FD%03");
 
-    /**
-     * This should not be used unless you want to define the strategy name by
-     * yourself.
-     *
-     * @param forwarder
-     * @param name
-     * @deprecated
-     */
-    @Deprecated
-    public BestRouteStrategy2(ForwardingPipeline forwarder, Name name) {
-        super(forwarder, name);
-    }
+	/**
+	 * This should not be used unless you want to define the strategy name by
+	 * yourself.
+	 *
+	 * @param forwarder
+	 * @param name
+	 * @deprecated
+	 */
+	@Deprecated
+	public BestRouteStrategy2(ForwardingPipeline forwarder, Name name) {
+		super(forwarder, name);
+	}
 
-    /**
-     * This should be the default constructor for this class
-     *
-     * @param forwarder
-     */
-    public BestRouteStrategy2(ForwardingPipeline forwarder) {
-        super(forwarder, STRATEGY_NAME);
-    }
+	/**
+	 * This should be the default constructor for this class
+	 *
+	 * @param forwarder
+	 */
+	public BestRouteStrategy2(ForwardingPipeline forwarder) {
+		super(forwarder, STRATEGY_NAME);
+	}
 
-    @Override
-    public void afterReceiveInterest(Face inFace, Interest interest,
-            FibEntry fibEntry, PitEntry pitEntry) {
-        List<FibNextHop> nextHopList = fibEntry.getNextHopList();
-        FibNextHop nextHop = null;
+	@Override
+	public void afterReceiveInterest(Face inFace, Interest interest,
+			FibEntry fibEntry, PitEntry pitEntry) {
+		List<FibNextHop> nextHopList = fibEntry.getNextHopList();
+		FibNextHop nextHop = null;
 
-        RetxSuppression.Result suppression
-                = retxSuppression.decide(inFace, interest, pitEntry);
+		RetxSuppression.Result suppression
+				= retxSuppression.decide(inFace, interest, pitEntry);
 
-        if (suppression == RetxSuppression.Result.NEW) {
-            // forward to nexthop with lowest cost except downstream
-            if (nextHopList != null) {
-                for (FibNextHop one : nextHopList) {
-                    if (predicate_NextHop_eligible(pitEntry, one, inFace.getFaceId(),
-                            false, 0)) {
-                        nextHop = one;
-                        break;
-                    }
-                }
-            }
+		if (suppression == RetxSuppression.Result.NEW) {
+			// forward to nexthop with lowest cost except downstream
+			if (nextHopList != null) {
+				for (FibNextHop one : nextHopList) {
+					if (predicate_NextHop_eligible(pitEntry, one, inFace.getFaceId(),
+							false, 0)) {
+						nextHop = one;
+						break;
+					}
+				}
+			}
 
-            if (nextHop == null) {
-                rejectPendingInterest(pitEntry);
-                return;
-            }
+			if (nextHop == null) {
+				rejectPendingInterest(pitEntry);
+				return;
+			}
 
-            Face outFace = nextHop.getFace();
-            sendInterest(pitEntry, outFace, false);
-            return;
-        }
+			Face outFace = nextHop.getFace();
+			sendInterest(pitEntry, outFace, false);
+			return;
+		}
 
-        if (suppression == RetxSuppression.Result.SUPPRESS) {
-            return;
-        }
+		if (suppression == RetxSuppression.Result.SUPPRESS) {
+			return;
+		}
 
-        // find an unused upstream with lowest cost except downstream
-        for (FibNextHop one : nextHopList) {
-            if (predicate_NextHop_eligible(pitEntry, one, inFace.getFaceId(),
-                    true, System.currentTimeMillis())) {
-                nextHop = one;
-                break;
-            }
-        }
-        if (nextHop != null) {
-            Face outFace = nextHop.getFace();
-            sendInterest(pitEntry, outFace, false);
-            return;
-        }
+		// find an unused upstream with lowest cost except downstream
+		for (FibNextHop one : nextHopList) {
+			if (predicate_NextHop_eligible(pitEntry, one, inFace.getFaceId(),
+					true, System.currentTimeMillis())) {
+				nextHop = one;
+				break;
+			}
+		}
+		if (nextHop != null) {
+			Face outFace = nextHop.getFace();
+			sendInterest(pitEntry, outFace, false);
+			return;
+		}
 
-        // find an eligible upstream that is used earliest
-        nextHop = findEligibleNextHopWithEarliestOutRecord(
-                pitEntry, nextHopList, inFace.getFaceId());
-        if (nextHop != null) {
-            Face outFace = nextHop.getFace();
-            sendInterest(pitEntry, outFace, false);
-        }
-    }
+		// find an eligible upstream that is used earliest
+		nextHop = findEligibleNextHopWithEarliestOutRecord(
+				pitEntry, nextHopList, inFace.getFaceId());
+		if (nextHop != null) {
+			Face outFace = nextHop.getFace();
+			sendInterest(pitEntry, outFace, false);
+		}
+	}
 
-    @Override
-    public void beforeSatisfyInterest(PitEntry pitEntry, Face inFace, Data data) {
-        //do nothing
-    }
+	@Override
+	public void beforeSatisfyInterest(PitEntry pitEntry, Face inFace, Data data) {
+		//do nothing
+	}
 
-    @Override
-    public void beforeExpirePendingInterest(PitEntry pitEntry) {
-        // do nothing
-    }
+	@Override
+	public void beforeExpirePendingInterest(PitEntry pitEntry) {
+		// do nothing
+	}
 
-    /**
-     * determines whether a NextHop is eligible.
-     *
-     * @param pitEntry
-     * @param nexthop
-     * @param currentDownstream incoming FaceId of current Interest
-     * @param wantUnused if true, NextHop must not have unexpired OutRecord
-     * @param currentTime ignored if !wantUnused
-     * @return
-     */
-    private static boolean predicate_NextHop_eligible(PitEntry pitEntry,
-            FibNextHop nexthop, int currentDownstreamId, boolean wantUnused,
-            long currentTime) {
-        Face upstream = nexthop.getFace();
+	/**
+	 * determines whether a NextHop is eligible.
+	 *
+	 * @param pitEntry
+	 * @param nexthop
+	 * @param currentDownstream incoming FaceId of current Interest
+	 * @param wantUnused if true, NextHop must not have unexpired OutRecord
+	 * @param currentTime ignored if !wantUnused
+	 * @return
+	 */
+	private static boolean predicate_NextHop_eligible(PitEntry pitEntry,
+			FibNextHop nexthop, int currentDownstreamId, boolean wantUnused,
+			long currentTime) {
+		Face upstream = nexthop.getFace();
 
-        // upstream is current downstream
-        if (upstream.getFaceId() == currentDownstreamId) {
-            return false;
-        }
+		// upstream is current downstream
+		if (upstream.getFaceId() == currentDownstreamId) {
+			return false;
+		}
 
-        // forwarding would violate scope
-        if (pitEntry.violatesScope(upstream)) {
-            return false;
-        }
+		// forwarding would violate scope
+		if (pitEntry.violatesScope(upstream)) {
+			return false;
+		}
 
-        if (wantUnused) {
-            // NextHop must not have unexpired OutRecord
-            PitOutRecord outRecord = pitEntry.getOutRecord(upstream);
-            if (outRecord != null && outRecord.getExpiry() > currentTime) {
-                return false;
-            }
-        }
+		if (wantUnused) {
+			// NextHop must not have unexpired OutRecord
+			PitOutRecord outRecord = pitEntry.getOutRecord(upstream);
+			if (outRecord != null && outRecord.getExpiry() > currentTime) {
+				return false;
+			}
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    /**
-     * Two parameters of normal predicate_NextHop_eligible are preset.
-     *
-     * @param pitEntry
-     * @param nexthop
-     * @param currentDownstreamId
-     * @return
-     */
-    private static boolean predicate_NextHop_eligible(PitEntry pitEntry,
-            FibNextHop nexthop, int currentDownstreamId) {
-        return predicate_NextHop_eligible(pitEntry,
-                nexthop, currentDownstreamId, false, 0);
-    }
+	/**
+	 * Two parameters of normal predicate_NextHop_eligible are preset.
+	 *
+	 * @param pitEntry
+	 * @param nexthop
+	 * @param currentDownstreamId
+	 * @return
+	 */
+	private static boolean predicate_NextHop_eligible(PitEntry pitEntry,
+			FibNextHop nexthop, int currentDownstreamId) {
+		return predicate_NextHop_eligible(pitEntry,
+				nexthop, currentDownstreamId, false, 0);
+	}
 
-    /**
-     * pick an eligible NextHop with earliest OutRecord, It is assumed that
-     * every nexthop has an OutRecord
-     *
-     * @param pitEntry
-     * @param nexthops
-     * @param currentDownstreamId
-     * @return
-     */
-    private static FibNextHop findEligibleNextHopWithEarliestOutRecord(
-            PitEntry pitEntry, List<FibNextHop> nexthops,
-            int currentDownstreamId) {
-        FibNextHop result = null;
-        long earliestRenewed = Long.MAX_VALUE;
-        for (FibNextHop one : nexthops) {
-            if (!predicate_NextHop_eligible(pitEntry, one, currentDownstreamId)) {
-                continue;
-            }
-            PitOutRecord outRecord = pitEntry.getOutRecord(one.getFace());
-            if (outRecord != null && outRecord.getLastRenewed() < earliestRenewed) {
-                result = one;
-                earliestRenewed = outRecord.getLastRenewed();
-            }
-        }
-        return result;
-    }
+	/**
+	 * pick an eligible NextHop with earliest OutRecord, It is assumed that
+	 * every nexthop has an OutRecord
+	 *
+	 * @param pitEntry
+	 * @param nexthops
+	 * @param currentDownstreamId
+	 * @return
+	 */
+	private static FibNextHop findEligibleNextHopWithEarliestOutRecord(
+			PitEntry pitEntry, List<FibNextHop> nexthops,
+			int currentDownstreamId) {
+		FibNextHop result = null;
+		long earliestRenewed = Long.MAX_VALUE;
+		for (FibNextHop one : nexthops) {
+			if (!predicate_NextHop_eligible(pitEntry, one, currentDownstreamId)) {
+				continue;
+			}
+			PitOutRecord outRecord = pitEntry.getOutRecord(one.getFace());
+			if (outRecord != null && outRecord.getLastRenewed() < earliestRenewed) {
+				result = one;
+				earliestRenewed = outRecord.getLastRenewed();
+			}
+		}
+		return result;
+	}
 
-    private RetxSuppressionExponential retxSuppression
-            = new RetxSuppressionExponential();
+	private RetxSuppressionExponential retxSuppression
+			= new RetxSuppressionExponential();
 
-    @Override
-    public Face[] determineOutgoingFaces(Interest interest, ForwardingPipeline forwarder) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+	@Override
+	public Face[] determineOutgoingFaces(Interest interest, ForwardingPipeline forwarder) {
+		throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+	}
 }

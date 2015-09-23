@@ -10,21 +10,20 @@ package com.intel.jnfd.deamon.table;
  * @author zht
  */
 public class Pair<V> {
-    public Pair(V first, boolean second) {
-        this.first = first;
-        this.second = second;
-    }
 
-    public V getFirst() {
-        return first;
-    }
+	public Pair(V first, boolean second) {
+		this.first = first;
+		this.second = second;
+	}
 
-    public boolean isSecond() {
-        return second;
-    }
-    
-    
-    
-    private V first;
-    private boolean second;
+	public V getFirst() {
+		return first;
+	}
+
+	public boolean isSecond() {
+		return second;
+	}
+
+	private V first;
+	private boolean second;
 }

@@ -13,28 +13,28 @@ import net.named_data.jndn.Name;
  */
 public class MeasurementEntry {
 
-    public MeasurementEntry() {
+	public MeasurementEntry() {
 
-    }
+	}
 
-    public MeasurementEntry(Name name) {
-        this.name = name;
-        expiry = -1;
-    }
+	public MeasurementEntry(Name name) {
+		this.name = name;
+		expiry = -1;
+	}
 
-    public Name getName() {
-        return name;
-    }
+	public Name getName() {
+		return name;
+	}
 
-    public long getExpiry() {
-        return expiry;
-    }
+	public long getExpiry() {
+		return expiry;
+	}
 
-    public void setExpiry(long expiry) {
-        this.expiry = expiry;
-    }
+	public void setExpiry(long expiry) {
+		this.expiry = expiry;
+	}
 
-    private Name name;
-    private long expiry;
+	private Name name;
+	private long expiry;
 
 }

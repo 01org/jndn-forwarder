@@ -19,7 +19,7 @@ import net.named_data.jndn.Name;
 public interface NameTable<V> {
 
 	public Set<Map.Entry<Name, V>> EntrySet();
-	
+
 	public Collection<V> values();
 
 	public void insert(Name prefix, V value);
@@ -29,8 +29,8 @@ public interface NameTable<V> {
 	public V findExactMatch(Name prefix);
 
 	public V findLongestPrefixMatch(Name prefix);
-        
-        public List<V> findAllMatch(Name prefix);
+
+	public List<V> findAllMatch(Name prefix);
 
 	public boolean hasKey(Name key);
 

@@ -15,11 +15,11 @@ import org.junit.Before;
  */
 public class ConsumerAndForwarder {
 
-    public static final Name PREFIX = new Name("/test");
-    private Face consumer;
-    private Forwarder forwarder;
-    
-    	@Before
+	public static final Name PREFIX = new Name("/test");
+	private Face consumer;
+	private Forwarder forwarder;
+
+	@Before
 	public void setUp() throws Exception {
 		forwarder = new Forwarder();
 		consumer = new Face();
@@ -27,8 +27,8 @@ public class ConsumerAndForwarder {
 
 		Thread.sleep(500);
 	}
-        
-        private void setupConsumer(final Face faceA) {
-            
-        }
+
+	private void setupConsumer(final Face faceA) {
+
+	}
 }

@@ -15,18 +15,18 @@ import java.util.Set;
  */
 public abstract class AbstractChannel implements Channel {
 
-    @Override
-    public Set<FaceUri> localUri() {
-        return localUris;
-    }
+	@Override
+	public Set<FaceUri> localUri() {
+		return localUris;
+	}
 
-    public void addLocalUri(FaceUri localUri) {
-        localUris.add(localUri);
-    }
-    
-    public void removeLocalUri(FaceUri localUri) {
-        localUris.remove(localUri);
-    }
+	public void addLocalUri(FaceUri localUri) {
+		localUris.add(localUri);
+	}
 
-    private final Set<FaceUri> localUris = new HashSet<>();
+	public void removeLocalUri(FaceUri localUri) {
+		localUris.remove(localUri);
+	}
+
+	private final Set<FaceUri> localUris = new HashSet<>();
 }
