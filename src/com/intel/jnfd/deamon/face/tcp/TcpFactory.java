@@ -28,7 +28,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public final class TcpFactory implements ProtocolFactory {
 

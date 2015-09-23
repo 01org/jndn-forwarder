@@ -9,7 +9,7 @@ import com.intel.jndn.forwarder.api.Face;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class PitOutRecord extends PitFaceRecord{
 

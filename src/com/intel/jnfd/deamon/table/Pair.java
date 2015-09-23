@@ -7,7 +7,7 @@ package com.intel.jnfd.deamon.table;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class Pair<V> {
     public Pair(V first, boolean second) {

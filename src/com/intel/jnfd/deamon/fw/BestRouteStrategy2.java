@@ -25,7 +25,7 @@ import net.named_data.jndn.Name;
  * the Interest again to the lowest-cost nexthop (except downstream) that is not
  * previously used. If all nexthops have been used, the strategy starts over.
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class BestRouteStrategy2 extends Strategy {
 

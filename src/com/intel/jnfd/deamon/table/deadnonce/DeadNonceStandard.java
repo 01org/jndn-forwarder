@@ -11,7 +11,7 @@ import net.named_data.jndn.util.Blob;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class DeadNonceStandard implements DeadNonce{
 

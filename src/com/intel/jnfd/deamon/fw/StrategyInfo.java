@@ -7,7 +7,7 @@ package com.intel.jnfd.deamon.fw;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public abstract class StrategyInfo {
     

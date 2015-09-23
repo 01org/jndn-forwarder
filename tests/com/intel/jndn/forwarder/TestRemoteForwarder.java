@@ -33,7 +33,7 @@ import org.junit.Test;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class TestRemoteForwarder {
 

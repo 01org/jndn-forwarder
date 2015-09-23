@@ -16,7 +16,7 @@ import net.named_data.jndn.encoding.EncodingException;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class Main {
 

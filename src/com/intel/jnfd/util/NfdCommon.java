@@ -9,7 +9,7 @@ import java.util.logging.Level;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class NfdCommon {
 	public static final long DEFAULT_INTEREST_LIFETIME = 2000;

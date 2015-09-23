@@ -9,7 +9,7 @@ import net.named_data.jndn.Name;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public class MeasurementEntry {
 

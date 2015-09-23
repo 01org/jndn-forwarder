@@ -7,7 +7,7 @@ package com.intel.jnfd.deamon.table;
 
 /**
  *
- * @author zht
+ * @author Haitao Zhang <zhtaoxiang@gmail.com>
  */
 public interface EntryFilter {
 
