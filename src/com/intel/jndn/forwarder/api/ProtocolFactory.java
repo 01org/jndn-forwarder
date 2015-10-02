@@ -24,23 +24,33 @@ import java.util.Collection;
 public interface ProtocolFactory {
 
 	/**
-	 * a factory may correspond to several different schemes
-	 *
-	 * @return
+	 * @return the scheme (e.g. 'tcp', 'udp', etc.) of the protocol; use this to
+	 * match factories to URIs
 	 */
-	public String[] scheme();
+	public String scheme();
 
 	/**
-	 * For each schemes, it has a localUri.
+	 * @return the local URI to be used for creating a default channel
+	 */
+	public FaceUri defaultLocalUri();
+
+	/**
 	 *
+	 * @param faceUri
 	 * @return
 	 */
-	public FaceUri[] defaultLocalUri();
-
 	public Channel createChannel(FaceUri faceUri);
 
+	/**
+	 * @return a list of currently open channels
+	 */
 	public Collection<? extends Channel> listChannels();
 
+	/**
+	 * Destroy the channel
+	 *
+	 * @param faceUri the URI of the channel
+	 */
 	public void destroyChannel(FaceUri faceUri);
 
 	public void createFace(FaceUri remoteFaceUri);
@@ -49,8 +59,6 @@ public interface ProtocolFactory {
 
 	public Collection<? extends Face> listFaces();
 
-//    public void createFace(FaceUri localFaceUri, FaceUri remoteFaceUri, 
-//            boolean newChannel);
 	public void destroyFace(Face face);
 
 	public void destroyFace(FaceUri localFaceUri, FaceUri remoteFaceUri);

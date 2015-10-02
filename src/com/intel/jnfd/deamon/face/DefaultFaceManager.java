@@ -67,10 +67,8 @@ public final class DefaultFaceManager implements FaceManager {
 
 	@Override
 	public void registerProtocol(ProtocolFactory protocolFactory) {
-		for (String one : protocolFactory.scheme()) {
-			if (!protocols.containsKey(one)) {
-				protocols.put(one, protocolFactory);
-			}
+		if (!protocols.containsKey(protocolFactory.scheme())) {
+			protocols.put(protocolFactory.scheme(), protocolFactory);
 		}
 	}
 

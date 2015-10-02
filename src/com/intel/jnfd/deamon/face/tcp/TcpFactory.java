@@ -68,8 +68,7 @@ public final class TcpFactory implements ProtocolFactory {
 					= AsynchronousChannelGroup.withThreadPool(pool);
 			LOCAL_ADDRESS = new InetAddress[]{InetAddress.getByName("0.0.0.0"),
 				InetAddress.getByName("::")};
-			DEFAULT_URI = new FaceUri[]{
-				new FaceUri("tcp4://0.0.0.0:6363"), new FaceUri("tcp6://[::]:6363")};
+			DEFAULT_URI = new FaceUri("tcp4://0.0.0.0:6363"); // or new FaceUri("tcp6://[::]:6363")};
 		} catch (ParseFaceUriException ex) {
 			logger.log(Level.SEVERE, null, ex);
 		} catch (UnknownHostException ex) {
@@ -78,16 +77,14 @@ public final class TcpFactory implements ProtocolFactory {
 			logger.log(Level.SEVERE, null, ex);
 		}
 		// create default channels and start to listen
-		for (FaceUri one : defaultLocalUri()) {
-			Channel channel = createChannel(one);
-			if (channel != null) {
-				try {
-					channel.open();
-					onChannelCreated.onCompleted(channel);
-				} catch (IOException ex) {
-					logger.log(Level.SEVERE, null, ex);
-					onChannelCreationFailed.onFailed(ex);
-				}
+		Channel channel = createChannel(defaultLocalUri());
+		if (channel != null) {
+			try {
+				channel.open();
+				onChannelCreated.onCompleted(channel);
+			} catch (IOException ex) {
+				logger.log(Level.SEVERE, null, ex);
+				onChannelCreationFailed.onFailed(ex);
 			}
 		}
 	}
@@ -206,31 +203,6 @@ public final class TcpFactory implements ProtocolFactory {
 		onFaceCreationFailed.onFailed(new IOException(
 				"No channels available to connect to for " + remoteFaceUri));
 	}
-//    @Override
-//    public void createFace(FaceUri localFaceUri, FaceUri remoteFaceUri,
-//            boolean newChannel) {
-//        TcpChannel channel = (TcpChannel) findChannel(localFaceUri);
-//        if (channel == null) {
-//            // If do not require to create new channel
-//            if (newChannel == false) {
-//                onFaceCreationFailed.onFailed(new Exception("No channel found "
-//                        + "for " + localFaceUri));
-//                return;
-//            }
-//            channel = (TcpChannel) createChannel(localFaceUri);
-//            channelMap.put(localFaceUri.getPort(), channel);
-//        }
-//        if (channel == null) {
-//            onFaceCreationFailed.onFailed(new Exception("No channel found or "
-//                    + "created for " + localFaceUri));
-//        }
-//        try {
-//            channel.connect(remoteFaceUri);
-//        } catch (IOException ex) {
-//            logger.log(Level.SEVERE, null, ex);
-//            onFaceCreationFailed.onFailed(ex);
-//        }
-//    }
 
 	@Override
 	public void destroyFace(Face face) {
@@ -257,7 +229,7 @@ public final class TcpFactory implements ProtocolFactory {
 	}
 
 	@Override
-	public String[] scheme() {
+	public String scheme() {
 		return SCHEME_NAME;
 	}
 
@@ -266,7 +238,7 @@ public final class TcpFactory implements ProtocolFactory {
 	}
 
 	@Override
-	public FaceUri[] defaultLocalUri() {
+	public FaceUri defaultLocalUri() {
 		return DEFAULT_URI;
 	}
 
@@ -285,12 +257,12 @@ public final class TcpFactory implements ProtocolFactory {
 
 	private static InetAddress LOCAL_ADDRESS[];
 	private static final int DEFAULT_PORT = 6363;
-	private static final String SCHEME_NAME[] = {"tcp4", "tcp6"};
+	private static final String SCHEME_NAME = "tcp";
 	private static final String DEFAULT_HOST = "::";
-	private static FaceUri[] DEFAULT_URI = null;
+	private static FaceUri DEFAULT_URI = null;
 
 	private static final Logger logger = Logger.getLogger(TcpFactory.class.getName());
-    // The port # is the entry for the channel, since IPv4 and IPv6 sockes can
+	// The port # is the entry for the channel, since IPv4 and IPv6 sockes can
 	// not be actived seperately
 	private final Map<Integer, TcpChannel> channelMap = new HashMap<>();
 	private AsynchronousChannelGroup asynchronousChannelGroup = null;
