@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 /**
+ * Test TCP face by stressing the socket with many interests
  *
  * @author Andrew Brown <andrew.brown@intel.com>
  */
@@ -104,11 +105,11 @@ public class TcpFace2Test {
 		});
 		Thread.sleep(2000);
 	}
-	
-	private void waitAtLeast(TestCounter counter, int expectedCount, long maxWaitMilliseconds) throws InterruptedException{
+
+	private void waitAtLeast(TestCounter counter, int expectedCount, long maxWaitMilliseconds) throws InterruptedException {
 		logger.info("Waiting for count to reach: " + expectedCount);
 		long end = System.currentTimeMillis() + maxWaitMilliseconds;
-		while(counter.count < expectedCount && System.currentTimeMillis() < end){
+		while (counter.count < expectedCount && System.currentTimeMillis() < end) {
 			Thread.sleep(20);
 		}
 	}

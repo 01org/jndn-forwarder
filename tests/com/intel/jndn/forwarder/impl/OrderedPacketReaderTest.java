@@ -70,10 +70,11 @@ public class OrderedPacketReaderTest {
 		buffer3.put(encodedData1, 500, encodedData1.length - 500);
 		buffer3.put(encodedInterest2);
 
-		reader.add(new TcpFace2.BufferAttachment(buffer1));
-		reader.add(new TcpFace2.BufferAttachment(buffer2));
-		reader.add(new TcpFace2.BufferAttachment(buffer3));
+		reader.add(OrderedPacket.fromFilledBuffer(buffer1));
+		reader.add(OrderedPacket.fromFilledBuffer(buffer2));
+		reader.add(OrderedPacket.fromFilledBuffer(buffer3));
 
+		// wait for the background thread reader to finish; TODO fix
 		Thread.sleep(250);
 
 		assertEquals(1, dataCounter.count);

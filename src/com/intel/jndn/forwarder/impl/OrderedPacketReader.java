@@ -15,7 +15,6 @@ package com.intel.jndn.forwarder.impl;
 
 import com.intel.jndn.forwarder.api.callbacks.OnDataReceived;
 import com.intel.jndn.forwarder.api.callbacks.OnInterestReceived;
-import com.intel.jnfd.deamon.face.tcp.TcpFace2.BufferAttachment;
 import java.nio.ByteBuffer;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -42,7 +41,7 @@ public class OrderedPacketReader {
 
 	private static final Logger logger = Logger.getLogger(OrderedPacketReader.class.getName());
 	private static int globalReaderCount = 0;
-	private final Queue<BufferAttachment> packets = new ConcurrentLinkedQueue<>();
+	private final Queue<OrderedPacket> packets = new ConcurrentLinkedQueue<>();
 	private final BackgroundReader reader;
 	private final Thread thread;
 	private boolean stopThreadWhenQueueIsEmpty = false;
@@ -65,17 +64,21 @@ public class OrderedPacketReader {
 	}
 
 	/**
-	 * Push a buffer on to the queue
+	 * Push a packet on to the queue
 	 *
-	 * @param buffer the bytes received
+	 * @param packet
 	 */
-	public void add(BufferAttachment attachment) {
-		packets.offer(attachment);
+	public void add(OrderedPacket packet) {
+		packets.offer(packet);
 		synchronized (reader) {
 			reader.notifyAll();
 		}
 	}
 
+	/**
+	 * Advise the packet reader to stop processing packets once the current
+	 * queue is empty
+	 */
 	public void stopGracefully() {
 		logger.log(Level.FINEST, "Stopping packet reader when queue is empty: {0}", thread.getName());
 		stopThreadWhenQueueIsEmpty = true;
@@ -97,6 +100,7 @@ public class OrderedPacketReader {
 		@Override
 		public void run() {
 			logger.log(Level.FINEST, "Starting packet reader: {0}", thread.getName());
+			
 			while (true) {
 				while (packets.isEmpty()) {
 					waitForNotify();
@@ -112,6 +116,7 @@ public class OrderedPacketReader {
 					break;
 				}
 			}
+			
 			logger.log(Level.FINEST, "Stopping packet reader: {0}", thread.getName());
 		}
 
@@ -124,7 +129,7 @@ public class OrderedPacketReader {
 			}
 		}
 
-		private void process(BufferAttachment attachment) {
+		private void process(OrderedPacket attachment) {
 			logger.log(Level.FINEST, "Decoding packet #{0}", numPackets);
 			try {
 				attachment.buffer.flip();
