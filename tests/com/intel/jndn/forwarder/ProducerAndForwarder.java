@@ -15,7 +15,7 @@ package com.intel.jndn.forwarder;
 
 import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
 import com.intel.jnfd.deamon.face.FaceUri;
-import static com.intel.jnfd.deamon.face.tcp.TcpFaceTest.configure;
+import static com.intel.jnfd.deamon.face.tcp.TcpFaceIT.configure;
 import com.intel.jnfd.deamon.table.fib.FibEntry;
 import net.named_data.jndn.Face;
 import net.named_data.jndn.Name;

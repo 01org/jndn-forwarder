@@ -11,12 +11,9 @@
  * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
  * more details.
  */
-package com.intel.jndn.forwarder;
+package com.intel.jnfd.deamon.face.tcp;
 
-import com.intel.jndn.forwarder.api.callbacks.OnCompleted;
-import com.intel.jnfd.deamon.face.FaceUri;
-import com.intel.jnfd.deamon.face.tcp.Producer;
-import com.intel.jnfd.deamon.table.fib.FibEntry;
+import com.intel.jndn.forwarder.Forwarder;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -26,9 +23,10 @@ import net.named_data.jndn.Data;
 import net.named_data.jndn.Face;
 import net.named_data.jndn.Interest;
 import net.named_data.jndn.Name;
+import net.named_data.jndn.Name.Component;
 import net.named_data.jndn.OnData;
-import net.named_data.jndn.encoding.WireFormat;
 import net.named_data.jndn.security.KeyChain;
+import net.named_data.jndn.security.SecurityException;
 import net.named_data.jndn.security.identity.IdentityManager;
 import net.named_data.jndn.security.identity.IdentityStorage;
 import net.named_data.jndn.security.identity.MemoryIdentityStorage;
@@ -41,35 +39,22 @@ import org.junit.Test;
 
 /**
  *
- * @author Haitao Zhang <zhtaoxiang@gmail.com>
+ * @author Andrew Brown <andrew.brown@intel.com>
  */
-public class TestRemoteForwarder {
+public class TcpFaceIT {
 
-	private static final Logger logger = Logger.getLogger(com.intel.jnfd.deamon.face.tcp.TcpFaceIT.class.getName());
-	public static final Name PREFIX = new Name("/haitao/test");
+	private static final Logger logger = Logger.getLogger(TcpFaceIT.class.getName());
+	public static final Name PREFIX = new Name("/test");
 	private Face producer;
 	private Face consumer;
 	private Forwarder forwarder;
 
 	@Before
 	public void setUp() throws Exception {
-		WireFormat defaultWireFormat = WireFormat.getDefaultWireFormat();
-
 		forwarder = new Forwarder();
-		forwarder.addNextHop(PREFIX, new FaceUri("tcp4://10.54.12.170:6363"),
-				0, new OnCompleted<FibEntry>() {
-
-					@Override
-					public void onCompleted(FibEntry result) {
-						System.out.println("add route successfully");
-					}
-
-				});
-
 		consumer = new Face();
 		setupConsumer(consumer);
-
-		producer = new Face("ndn-lab2.jf.intel.com");
+		producer = new Face();
 		setupProducer(producer);
 
 		Thread.sleep(2000);
@@ -78,7 +63,7 @@ public class TestRemoteForwarder {
 	@Test
 	public void testSendInterest() throws Exception {
 
-		producer.registerPrefix(new Name(PREFIX), new Producer(), null);
+		producer.registerPrefix(PREFIX, new Producer(), null);
 
 		int waitCount = 10;
 		while (waitCount-- > 0) {
@@ -89,7 +74,7 @@ public class TestRemoteForwarder {
 		long totalInterests = 1000;
 		long interestCount = 0;
 		final AtomicLong dataCount = new AtomicLong(0);
-		final Set<Name.Component> sent = new HashSet();
+		final Set<Component> sent = new HashSet();
 		while (interestCount++ < totalInterests) {
 			Interest interest = new Interest(new Name(PREFIX).appendSegment(interestCount));
 			interest.setInterestLifetimeMilliseconds(20000);
@@ -126,27 +111,64 @@ public class TestRemoteForwarder {
 	}
 
 	private void setupConsumer(final Face faceA) {
+//		Thread thread = new Thread(new Runnable() {
+//			@Override
+//			public void run() {
+//				try {
+//					while (true) {
+//						faceA.processEvents();
+//					}
+//				} catch (IOException | EncodingException ex) {
+//					logger.log(Level.SEVERE, "Failed to process events", ex);
+//				}
+//			}
+//		});
+//		thread.setName("consumer");
+//		thread.start();
 	}
 
-	private void setupProducer(final Face faceB) throws net.named_data.jndn.security.SecurityException {
-		MemoryIdentityStorage identityStorage = new MemoryIdentityStorage();
-		MemoryPrivateKeyStorage privateKeyStorage
-				= new MemoryPrivateKeyStorage();
-		KeyChain keyChain = new KeyChain(
-				new IdentityManager(identityStorage, privateKeyStorage),
+	private void setupProducer(final Face faceB) throws SecurityException {
+		KeyChain keyChain = configure(new Name("/producer"));
+		faceB.setCommandSigningInfo(keyChain, keyChain.getDefaultCertificateName());
+
+//		Thread thread = new Thread(new Runnable() {
+//			@Override
+//			public void run() {
+//				try {
+//					while (true) {
+//						faceB.processEvents();
+//					}
+//				} catch (IOException | EncodingException ex) {
+//					logger.log(Level.SEVERE, "Failed to process events", ex);
+//				}
+//			}
+//		});
+//		thread.setName("producer");
+//		thread.start();
+	}
+
+	public static KeyChain configure(Name name) throws net.named_data.jndn.security.SecurityException {
+		// access key chain in ~/.ndn; create if necessary 
+		PrivateKeyStorage keyStorage = new MemoryPrivateKeyStorage();
+		IdentityStorage identityStorage = new MemoryIdentityStorage();
+		KeyChain keyChain = new KeyChain(new IdentityManager(identityStorage, keyStorage),
 				new SelfVerifyPolicyManager(identityStorage));
-		Name identityName = new Name("/haitao/test");
-		Name keyName = keyChain.generateRSAKeyPairAsDefault(identityName);
-		Name certificateName = keyName.getSubName(0, keyName.size() - 1)
-				.append("KEY").append(keyName.get(-1)).append("ID-CERT")
-				.append("0");
 
-		faceB.setCommandSigningInfo(keyChain, certificateName);
+		// create keys, certs if necessary
+		if (!identityStorage.doesIdentityExist(name)) {
+			Name keyName = keyChain.createIdentity(name);
+			keyChain.setDefaultKeyForIdentity(keyName, name);
+		}
+
+		// set default identity
+		keyChain.getIdentityManager().setDefaultIdentity(name);
+
+		return keyChain;
 	}
 
-	private String componentsToUri(Set<Name.Component> sent) {
+	private String componentsToUri(Set<Component> sent) {
 		StringBuilder sb = new StringBuilder("[");
-		for (Name.Component c : sent) {
+		for (Component c : sent) {
 			sb.append(c.toEscapedString() + ", ");
 		}
 		sb.append("]");
